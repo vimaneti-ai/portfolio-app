@@ -140,3 +140,33 @@ cp -r portfolio-app/portfolio-frontend/src/app/* portfolio-site/src/app/
 ```
 
 The design was rebuilt to match `vinod-portfolio.html` — global styles in `styles.css`, full page layout in `app.component.html`, projects loaded dynamically from the API.
+
+---
+
+## GitHub
+
+Repository: **https://github.com/vimaneti-ai/portfolio-app**
+
+Initial push:
+```bash
+cd /Users/vinod/Projects/portfolio-app
+git init
+git add .
+git commit -m "Initial commit — Angular + Spring Boot + MySQL portfolio app"
+git remote add origin https://github.com/vimaneti-ai/portfolio-app.git
+git branch -M main
+git push -u origin main
+```
+
+`application.properties` is excluded via `.gitignore` — credentials are never pushed.
+
+---
+
+## Next Steps (before deploying)
+
+- **Backend** — deploy to AWS Elastic Beanstalk + RDS (or Railway)
+- **Frontend** — deploy to Vercel
+- `WebConfig.java` — update allowed origins with your Vercel URL
+- `api.service.ts` — update `baseUrl` with your deployed backend URL
+- `app.component.html` — add real LinkedIn and GitHub URLs in the contact section
+- `GET /api/contact` — add authentication before going public
