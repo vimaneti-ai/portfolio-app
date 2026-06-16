@@ -6,6 +6,9 @@ portfolio-backend/target/
 
 # Node
 portfolio-frontend/node_modules/
+portfolio-site/node_modules/
+portfolio-site/.angular/
+portfolio-site/dist/
 
 # macOS
 .DS_Store
