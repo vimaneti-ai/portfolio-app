@@ -1,0 +1,41 @@
+<section id="projects" class="projects">
+  <div class="wrap">
+    <div class="sec-label">03 / projects</div>
+    <h2 class="sec-title">Selected work</h2>
+
+    <!-- Category filter buttons -->
+    <div class="filters">
+      <button
+        *ngFor="let f of filters"
+        class="filter-btn"
+        [class.active]="activeFilter === f.key"
+        (click)="setFilter(f.key)">
+        {{ f.label }}
+      </button>
+    </div>
+
+    <!-- Loading state -->
+    <p *ngIf="loading" class="status">Loading projects…</p>
+
+    <!-- Error state -->
+    <p *ngIf="error" class="status error">{{ error }}</p>
+
+    <!-- Empty state -->
+    <p *ngIf="!loading && !error && projects.length === 0" class="status">
+      No projects in this category yet.
+    </p>
+
+    <!-- Project cards -->
+    <div class="proj-grid" *ngIf="!loading && !error">
+      <article class="proj-card" *ngFor="let p of projects">
+        <div class="proj-kicker">{{ p.kicker }}</div>
+        <h3>{{ p.title }}</h3>
+        <p>{{ p.description }}</p>
+        <span class="proj-metric" *ngIf="p.metric">{{ p.metric }}</span>
+        <div class="tags">
+          <span class="tag" *ngFor="let t of tagList(p.tags)">{{ t }}</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>

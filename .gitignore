@@ -1,0 +1,11 @@
+# Credentials — never commit
+portfolio-backend/src/main/resources/application.properties
+
+# Maven build output
+portfolio-backend/target/
+
+# Node
+portfolio-frontend/node_modules/
+
+# macOS
+.DS_Store
