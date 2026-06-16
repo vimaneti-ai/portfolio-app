@@ -1,0 +1,14 @@
+<p *ngIf="loading" class="proj-loading">Loading projects…</p>
+<p *ngIf="error" class="proj-error">{{ error }}</p>
+
+<div *ngIf="!loading && !error" class="proj-grid">
+  <div *ngFor="let p of projects" class="proj-card">
+    <div class="proj-kicker">{{ p.kicker }}</div>
+    <h3>{{ p.title }}</h3>
+    <p>{{ p.description }}</p>
+    <span class="proj-metric" *ngIf="p.metric">{{ p.metric }}</span>
+    <div class="tags">
+      <span *ngFor="let t of tagList(p.tags)" class="tag">{{ t }}</span>
+    </div>
+  </div>
+</div>

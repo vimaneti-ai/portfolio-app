@@ -1,0 +1,203 @@
+<nav id="nav" [class.scrolled]="navScrolled">
+  <div class="nav-inner">
+    <a href="#top" class="logo">vinod<span>.dev</span></a>
+    <div class="nav-links" [class.open]="menuOpen">
+      <a href="#about" (click)="closeMenu()">About</a>
+      <a href="#experience" (click)="closeMenu()">Experience</a>
+      <a href="#projects" (click)="closeMenu()">Projects</a>
+      <a href="#skills" (click)="closeMenu()">Skills</a>
+      <a href="#contact" (click)="closeMenu()">Contact</a>
+      <a href="assets/vinod-maneti-resume.pdf" target="_blank" class="nav-resume" (click)="closeMenu()">Résumé</a>
+    </div>
+    <button class="menu-btn" (click)="toggleMenu()">☰</button>
+  </div>
+</nav>
+
+<header id="top">
+  <div class="hero-grid"></div>
+  <div class="wrap hero-content">
+    <div class="eyebrow">// hi, I'm</div>
+    <h1>Vinod Kumar<br>Maneti</h1>
+    <div class="hero-sub">Software Engineer · Full-Stack</div>
+    <p class="hero-desc">
+      I build and maintain <strong>reliable enterprise web applications</strong> using Angular, Spring Boot, and Java —
+      the kind of systems that have to stay up, stay fast, and handle real money. Six years of shipping
+      and supporting production software at <strong>Amazon</strong> and <strong>KFin Technologies</strong>.
+    </p>
+    <div class="hero-meta">
+      <span>📍 Austin, TX</span>
+      <span class="dot">·</span>
+      <span>MBA in progress</span>
+      <span class="dot">·</span>
+      <span>Open to SWE roles</span>
+    </div>
+    <div class="hero-cta">
+      <a href="#projects" class="btn btn-primary">View projects</a>
+      <a href="#contact" class="btn btn-ghost">Get in touch</a>
+    </div>
+  </div>
+</header>
+
+<section id="about">
+  <div class="wrap">
+    <div class="sec-label">01 / about</div>
+    <h2 class="sec-title reveal">A bit about me</h2>
+    <div class="about-grid reveal">
+      <div class="about-text">
+        <p>
+          I'm a software engineer with about six years of experience building enterprise applications,
+          handling production support, and coordinating across teams to keep critical systems running.
+          Most recently I worked at <strong>Amazon</strong>, and before that at <strong>KFin Technologies</strong> in India,
+          where I worked on financial systems serving mutual fund investors and asset management companies.
+        </p>
+        <p>
+          My core stack is <strong>Java and Spring Boot</strong> on the backend, <strong>Angular and TypeScript</strong>
+          on the frontend, with SQL databases and AWS underneath. I've spent a lot of time in the part of engineering
+          that does not always get attention — debugging production issues, hardening workflows, and making sure the
+          system behaves correctly when real users do unexpected things.
+        </p>
+        <p>
+          I'm currently pursuing an <strong>MBA</strong> alongside my engineering work, with a long-term goal of growing
+          into an engineering management role. I care about writing software that is dependable and about
+          helping the people around me do their best work.
+        </p>
+      </div>
+      <div class="about-cards">
+        <div class="about-card">
+          <div class="k">experience</div>
+          <div class="v">~6 years</div>
+          <div class="s">Amazon · KFin Technologies</div>
+        </div>
+        <div class="about-card">
+          <div class="k">focus</div>
+          <div class="v">Full-stack &amp; enterprise systems</div>
+          <div class="s">Production support · reliability</div>
+        </div>
+        <div class="about-card">
+          <div class="k">currently</div>
+          <div class="v">MBA candidate</div>
+          <div class="s">Toward engineering management</div>
+        </div>
+        <div class="about-card">
+          <div class="k">based in</div>
+          <div class="v">Austin, TX</div>
+          <div class="s">Open to remote / hybrid</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="experience">
+  <div class="wrap">
+    <div class="sec-label">02 / experience</div>
+    <h2 class="sec-title reveal">Where I've worked</h2>
+
+    <div class="exp-item reveal">
+      <div class="exp-meta">
+        <div class="role">Software Engineer</div>
+        <div class="loc">Through Sept 2025</div>
+      </div>
+      <div class="exp-body">
+        <h3>Software Engineer</h3>
+        <div class="company">Amazon</div>
+        <ul>
+          <li>Built and supported enterprise applications and services, contributing to features that improved efficiency and reliability across teams.</li>
+          <li>Coordinated across developers, testers, analysts, and operations to resolve production issues quickly and keep systems stable.</li>
+          <li>Worked with AWS services and CI/CD tooling to ship and maintain code in a high-scale environment.</li>
+        </ul>
+        <div class="tags">
+          <span class="tag">Java</span><span class="tag">Spring Boot</span>
+          <span class="tag">AWS</span><span class="tag">CI/CD</span><span class="tag">TypeScript</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-item reveal">
+      <div class="exp-meta">
+        <div class="role">Software Engineer</div>
+        <div class="loc">India</div>
+      </div>
+      <div class="exp-body">
+        <h3>Software Engineer</h3>
+        <div class="company">KFin Technologies</div>
+        <ul>
+          <li>Developed and maintained enterprise applications for mutual fund and asset management workflows used by branch users and AMCs.</li>
+          <li>Owned production support — diagnosing and fixing live issues in investor-facing systems where correctness and uptime were critical.</li>
+          <li>Improved compliance and data integrity by adding validation and API integrations to investor onboarding and subscription workflows.</li>
+        </ul>
+        <div class="tags">
+          <span class="tag">Java</span><span class="tag">Spring Boot</span>
+          <span class="tag">Angular</span><span class="tag">.NET</span><span class="tag">SQL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="wrap">
+    <div class="sec-label">03 / projects</div>
+    <h2 class="sec-title reveal">Selected work</h2>
+    <app-projects></app-projects>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="wrap">
+    <div class="sec-label">04 / skills</div>
+    <h2 class="sec-title reveal">Tools I build with</h2>
+    <div class="skills-grid reveal">
+      <div class="skill-group">
+        <h4>Backend</h4>
+        <div class="skill-chips">
+          <span class="chip">Java</span><span class="chip">Spring Boot</span>
+          <span class="chip">REST APIs</span><span class="chip">.NET</span>
+          <span class="chip">Microservices</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <h4>Frontend</h4>
+        <div class="skill-chips">
+          <span class="chip">Angular</span><span class="chip">TypeScript</span>
+          <span class="chip">HTML5</span><span class="chip">CSS3</span>
+          <span class="chip">JavaScript</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <h4>Cloud &amp; data</h4>
+        <div class="skill-chips">
+          <span class="chip">AWS</span><span class="chip">SQL</span>
+          <span class="chip">MySQL</span><span class="chip">CI/CD</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <h4>Practices &amp; tools</h4>
+        <div class="skill-chips">
+          <span class="chip">Git</span><span class="chip">Production support</span>
+          <span class="chip">Agile</span><span class="chip">Cross-team coordination</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="contact">
+  <div class="wrap">
+    <div class="sec-label">05 / contact</div>
+    <h2 class="sec-title reveal">Let's talk</h2>
+    <p class="reveal">
+      I'm open to software engineering roles and always happy to connect with other engineers.
+      The fastest way to reach me is by email or LinkedIn.
+    </p>
+    <div class="contact-links reveal">
+      <a href="mailto:vinodben594@gmail.com" class="btn btn-primary">Email me</a>
+      <a href="#" target="_blank" class="btn btn-ghost">LinkedIn</a>
+      <a href="#" target="_blank" class="btn btn-ghost">GitHub</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 Vinod Kumar Maneti · Built with Angular + Spring Boot
+</footer>

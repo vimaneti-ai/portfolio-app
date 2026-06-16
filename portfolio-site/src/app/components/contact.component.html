@@ -1,0 +1,66 @@
+<section id="contact" class="contact">
+  <div class="wrap">
+    <div class="sec-label">05 / contact</div>
+    <h2 class="sec-title">Let's talk</h2>
+    <p class="intro">
+      Open to software engineering roles and always happy to connect with other engineers.
+      Send a message below and I'll get back to you.
+    </p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="contact-form" novalidate>
+
+      <div class="row">
+        <div class="field">
+          <label for="firstName">First name *</label>
+          <input id="firstName" type="text" formControlName="firstName" />
+          <small class="err" *ngIf="firstName?.touched && firstName?.errors?.['required']">
+            First name is required
+          </small>
+          <small class="err" *ngIf="firstName?.errors?.['maxlength']">
+            Must be under 100 characters
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="lastName">Last name *</label>
+          <input id="lastName" type="text" formControlName="lastName" />
+          <small class="err" *ngIf="lastName?.touched && lastName?.errors?.['required']">
+            Last name is required
+          </small>
+          <small class="err" *ngIf="lastName?.errors?.['maxlength']">
+            Must be under 100 characters
+          </small>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">Email *</label>
+        <input id="email" type="email" formControlName="email" />
+        <small class="err" *ngIf="email?.touched && email?.errors?.['required']">
+          Email is required
+        </small>
+        <small class="err" *ngIf="email?.touched && email?.errors?.['email']">
+          Please enter a valid email address
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="message">Message *</label>
+        <textarea id="message" rows="5" formControlName="message"></textarea>
+        <small class="err" *ngIf="message?.touched && message?.errors?.['required']">
+          Message is required
+        </small>
+        <small class="err" *ngIf="message?.errors?.['maxlength']">
+          Must be under 2000 characters
+        </small>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="submitting">
+        {{ submitting ? 'Sending…' : 'Send message' }}
+      </button>
+
+      <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+      <p class="err" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </form>
+  </div>
+</section>
