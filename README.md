@@ -1,13 +1,17 @@
 # Portfolio Website — Full-Stack Build
 
-A personal portfolio site built with **Angular 17 + Spring Boot + MySQL**, deployed on **Vercel**.
+A personal portfolio site built with **Angular 17 + Spring Boot + MySQL**.
+
+GitHub: **https://github.com/vimaneti-ai/portfolio-app**
+
+---
+
+## What this app does
 
 Two features make this a real full-stack app instead of a static page:
 
-1. **Projects from a database** — the Projects section loads from `GET /api/projects` instead of being hardcoded
+1. **Projects from a database** — the Projects section loads dynamically from `GET /api/projects`
 2. **Contact form** — Angular reactive form → Spring Boot REST API → MySQL
-
-The design matches `vinod-portfolio.html` — dark theme with animated hero, about, experience, projects, skills, and contact sections.
 
 ---
 
@@ -17,7 +21,7 @@ The design matches `vinod-portfolio.html` — dark theme with animated hero, abo
    Browser
       |
       v
-  Angular 17 app  (portfolio-site — lives outside this repo)
+  Angular 17 app  (portfolio-site/)
       |   REST (JSON)
       v
   Spring Boot API   ──  Controller → Service → Repository
@@ -31,29 +35,62 @@ The design matches `vinod-portfolio.html` — dark theme with animated hero, abo
 ## Project structure
 
 ```
-portfolio-backend/        Spring Boot app (Java 17, Maven)
-  src/main/java/com/vinod/portfolio/
-    controller/           REST endpoints (contact, projects, error handling)
-    service/              business logic
-    repository/           Spring Data JPA interfaces
-    model/                JPA entities (ContactMessage, Project)
-    config/               CORS configuration
-  src/main/resources/
-    application.properties  MySQL connection settings
-  pom.xml
+portfolio-app/
+  portfolio-backend/        Spring Boot app (Java 17, Maven)
+    src/main/java/com/vinod/portfolio/
+      controller/           REST endpoints (contact, projects, error handling)
+      service/              business logic
+      repository/           Spring Data JPA interfaces
+      model/                JPA entities (ContactMessage, Project)
+      config/               CORS configuration (WebConfig.java)
+    src/main/resources/
+      application.properties          MySQL connection (gitignored)
+      application.properties.example  Template — copy and fill in credentials
+    pom.xml
 
-portfolio-frontend/       Source components (not a runnable app)
-  src/app/                Copy these into your Angular project to use them
-    components/           ProjectsComponent + ContactComponent (standalone)
-    services/             api.service.ts — single HTTP client for all API calls
-    models/               TypeScript interfaces
+  portfolio-frontend/       Source components (not a runnable app)
+    src/app/
+      components/           ProjectsComponent + ContactComponent (standalone)
+      services/             api.service.ts
+      models/               TypeScript interfaces
 
-portfolio-db/
-  schema.sql              Creates portfolio_db, both tables, and seeds projects
+  portfolio-site/           Live Angular 17 app (NgModule-based)
+    src/
+      app/
+        app.component.html  Full page layout — nav, hero, about, experience, skills, contact, footer
+        app.component.ts    Nav scroll, mobile menu, stats counter animation
+        components/         ProjectsComponent (dynamic from API), ContactComponent
+        services/           api.service.ts — all HTTP calls go through here
+      styles.css            Global dark theme — all CSS variables and component styles
+      assets/               Put resume PDF here (vinod-maneti-resume.pdf)
+
+  portfolio-db/
+    schema.sql              Creates portfolio_db, both tables, seeds projects
 ```
 
-> The live Angular app is at `/Users/vinod/Projects/portfolio-site` (Angular 17, NgModule-based).
-> `portfolio-frontend` contains the source components that were copied into it.
+---
+
+## Design & theme
+
+StackHawk-inspired dark theme with 8 CSS tokens in `portfolio-site/src/styles.css`:
+
+| Token | Value | Role |
+|-------|-------|------|
+| `--ink` | `#07070f` | Page background |
+| `--surface` | `#0e0e1c` | Cards, alternate sections |
+| `--edge` | `#1e1e34` | Borders |
+| `--hi` | `#eeeef8` | Headings, body text |
+| `--lo` | `#6868a0` | Secondary text |
+| `--violet` | `#7c3aed` | Primary accent, gradients |
+| `--teal` | `#00cfaa` | Labels, kickers |
+| `--bronze` | `#b87848` | Project kickers, metric pills |
+
+UI features:
+- Animated gradient hero name (violet→teal wave)
+- Stats counter bar — counts up on load (6+ years, 2 companies, 4 projects)
+- Glassmorphism about cards with gradient border
+- Vertical experience timeline with glowing dot markers
+- Spinning gradient border on project cards on hover
 
 ---
 
@@ -63,22 +100,28 @@ portfolio-db/
 
 ### Prerequisites
 
-- Java 17+
-- Maven (`/usr/local/maven` on this machine — add to PATH if needed)
-- MySQL (`/usr/local/mysql` on this machine — official installer, not Homebrew)
-- Node 20+ and Angular CLI 17 (`npm install -g @angular/cli@17`)
+| Tool | Version / Notes |
+|------|----------------|
+| Java | 17+ |
+| Maven | 3.9.9 at `/usr/local/maven` — add to PATH if needed |
+| MySQL | 8.x at `/usr/local/mysql` — official installer, not Homebrew |
+| Node | 20.12.1 |
+| Angular CLI | 17 (`sudo npm install -g @angular/cli@17`) |
 
 ### 1. Database
 
+Copy the example properties file and set your password:
+```bash
+cp portfolio-backend/src/main/resources/application.properties.example \
+   portfolio-backend/src/main/resources/application.properties
+```
+
+Load the schema:
 ```bash
 /usr/local/mysql/bin/mysql -u root -p < portfolio-db/schema.sql
 ```
 
-Creates `portfolio_db` with two tables and seeds your projects.
-
 ### 2. Backend
-
-Edit `application.properties` and set your MySQL password. Then:
 
 ```bash
 cd portfolio-backend
@@ -86,7 +129,6 @@ mvn spring-boot:run
 ```
 
 API runs at `http://localhost:8080`. Verify:
-
 ```bash
 curl http://localhost:8080/api/projects
 ```
@@ -94,7 +136,7 @@ curl http://localhost:8080/api/projects
 ### 3. Frontend
 
 ```bash
-cd /Users/vinod/Projects/portfolio-site
+cd portfolio-site
 ng serve
 ```
 
@@ -109,13 +151,14 @@ App runs at `http://localhost:4200`.
 | GET  | `/api/projects` | All projects in display order |
 | GET  | `/api/projects?category=backend` | Filter by category |
 | POST | `/api/contact` | Submit a contact message |
-| GET  | `/api/contact` | List messages (protect this in production) |
+| GET  | `/api/contact` | List messages (**protect before going public**) |
 
 ---
 
 ## Before deploying
 
-- Set your real MySQL password in `application.properties`
 - Update allowed origins in `WebConfig.java` with your Vercel URL
-- Update `baseUrl` in `api.service.ts` with your deployed backend URL
+- Update `baseUrl` in `portfolio-site/src/app/services/api.service.ts` with deployed backend URL
 - Protect `GET /api/contact` with authentication
+- Add resume PDF to `portfolio-site/src/assets/vinod-maneti-resume.pdf`
+- Update LinkedIn and GitHub URLs in `app.component.html` contact section (already done)

@@ -1,6 +1,6 @@
 # Local Setup — What We Did & What We Hit
 
-A full record of getting this app running locally for the first time (June 2026).
+A full record of getting this app running locally (June 2026).
 
 ---
 
@@ -19,9 +19,15 @@ A full record of getting this app running locally for the first time (June 2026)
 
 ## Step 1 — Configure the backend
 
-Edit `portfolio-backend/src/main/resources/application.properties`:
-- Set `spring.datasource.password` to your MySQL root password
-- Add `allowPublicKeyRetrieval=true` to the datasource URL
+Copy the example file and fill in your MySQL password:
+```bash
+cp portfolio-backend/src/main/resources/application.properties.example \
+   portfolio-backend/src/main/resources/application.properties
+```
+
+Edit the file and set:
+- `spring.datasource.password` — your MySQL root password
+- `allowPublicKeyRetrieval=true` is already in the example (required for this MySQL setup)
 
 ---
 
@@ -36,42 +42,46 @@ Verify:
 /usr/local/mysql/bin/mysql -u root -p'YOUR_PASSWORD' -e "USE portfolio_db; SHOW TABLES;"
 ```
 
-Expected output: `contact_messages` and `projects`.
+Expected: `contact_messages` and `projects` tables.
 
 ---
 
 ## Step 3 — Start the backend
 
 ```bash
+export PATH=/usr/local/maven/bin:$PATH
 cd portfolio-backend
 mvn spring-boot:run
 ```
 
-If `mvn` is not found: `export PATH=/usr/local/maven/bin:$PATH`
-
-Verify: `curl http://localhost:8080/api/projects`
+Wait for `Started PortfolioApplication`. Verify:
+```bash
+curl http://localhost:8080/api/projects
+```
 
 ---
 
 ## Step 4 — Start the frontend
 
-The live Angular app is at `/Users/vinod/Projects/portfolio-site` (separate from this repo).
-
 ```bash
-cd /Users/vinod/Projects/portfolio-site
+cd portfolio-site
 ng serve
 ```
 
 Open `http://localhost:4200`.
+
+> **Note:** `portfolio-site/` is inside this repo at `portfolio-app/portfolio-site/`.
+> The original `/Users/vinod/Projects/portfolio-site` directory has been deleted.
+> Always edit and run from `portfolio-app/portfolio-site/`.
 
 ---
 
 ## Issues & Fixes
 
 ### MySQL: Access Denied (ERROR 1045)
-Root password was unknown. Homebrew was broken so status couldn't be checked via `brew services`.
+Root password was unknown. Homebrew was broken so `brew services` couldn't check status.
 
-**Fix:** MySQL is installed at `/usr/local/mysql`. Reset root password using safe mode:
+**Fix:** Reset root password using safe mode:
 ```bash
 sudo /usr/local/mysql/support-files/mysql.server stop
 sudo /usr/local/mysql/bin/mysqld_safe --skip-grant-tables &
@@ -83,14 +93,14 @@ FLUSH PRIVILEGES;
 ALTER USER 'root'@'localhost' IDENTIFIED BY 'YOUR_PASSWORD';
 EXIT;
 ```
-Restart MySQL from System Settings → MySQL.
+Restart from System Settings → MySQL.
 
 ---
 
 ### Maven: command not found
-Maven was not installed and Homebrew was broken.
+Maven not installed, Homebrew broken.
 
-**Fix:** Download from the Apache archive (dlcdn.apache.org returned 404):
+**Fix:** `dlcdn.apache.org` returned 404 — use the Apache archive instead:
 ```bash
 curl -O https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
 tar -xzf apache-maven-3.9.9-bin.tar.gz
@@ -122,7 +132,7 @@ sudo npm install -g @angular/cli@17
 ---
 
 ### Standalone components in NgModule error
-`ProjectsComponent` and `ContactComponent` use `standalone: true` and cannot go in `declarations[]`.
+`ProjectsComponent` and `ContactComponent` use `standalone: true` — cannot go in `declarations[]`.
 
 **Fix:** Put them in `imports[]` in `AppModule`:
 ```typescript
@@ -131,15 +141,53 @@ imports: [BrowserModule, HttpClientModule, ProjectsComponent, ContactComponent]
 
 ---
 
-## Frontend Setup (one-time)
+### Projects section showing nothing
+Cards had `class="proj-card reveal"` — the `reveal` class starts at `opacity: 0` and relies on an IntersectionObserver added in `ngAfterViewInit`. Since cards are rendered asynchronously after the API call, the observer never picks them up.
 
-The Angular app (`portfolio-site`) was created fresh and the components copied in:
+**Fix:** Removed `reveal` from dynamically rendered project cards in `projects.component.html`.
+
+---
+
+### portfolio-site added as git submodule
+Copying `portfolio-site` into `portfolio-app` while it still had its own `.git` folder caused git to treat it as a submodule — only a reference was committed, not the files.
+
+**Fix:**
 ```bash
-ng new portfolio-site --no-standalone --routing false --style css
-cp -r portfolio-app/portfolio-frontend/src/app/* portfolio-site/src/app/
+git rm --cached portfolio-site
+rm -rf portfolio-site/.git
+git add portfolio-site
+git commit -m "Add portfolio-site source files"
+git push
 ```
 
-The design was rebuilt to match `vinod-portfolio.html` — global styles in `styles.css`, full page layout in `app.component.html`, projects loaded dynamically from the API.
+---
+
+## Frontend Setup (one-time)
+
+The Angular app was created fresh and components copied in:
+```bash
+ng new portfolio-site --no-standalone --routing false --style css
+cp -r portfolio-frontend/src/app/* portfolio-site/src/app/
+```
+
+Then `app.module.ts`, `app.component.html`, `app.component.ts`, and `styles.css` were fully rebuilt to match the portfolio design.
+
+---
+
+## Design iterations
+
+| Theme | Description |
+|-------|-------------|
+| Original | Dark — violet/teal/black (StackHawk-inspired) |
+| Apple theme | Light — white/gray canvas, near-black text |
+| **Final** | **Dark — StackHawk with 8 CSS tokens (`--ink`, `--surface`, `--edge`, `--hi`, `--lo`, `--violet`, `--teal`, `--bronze`)** |
+
+UI features added progressively:
+- Animated gradient name in hero
+- Stats counter bar (counts up on page load)
+- Glassmorphism about cards (frosted glass + gradient border)
+- Vertical experience timeline with glowing dot markers
+- Spinning gradient border on project cards on hover
 
 ---
 
@@ -147,26 +195,26 @@ The design was rebuilt to match `vinod-portfolio.html` — global styles in `sty
 
 Repository: **https://github.com/vimaneti-ai/portfolio-app**
 
-Initial push:
+`application.properties` is excluded via `.gitignore` — credentials are never pushed.
+`application.properties.example` is committed as a setup template.
+
+Push changes:
 ```bash
 cd /Users/vinod/Projects/portfolio-app
-git init
 git add .
-git commit -m "Initial commit — Angular + Spring Boot + MySQL portfolio app"
-git remote add origin https://github.com/vimaneti-ai/portfolio-app.git
-git branch -M main
-git push -u origin main
+git commit -m "your message"
+git push
 ```
-
-`application.properties` is excluded via `.gitignore` — credentials are never pushed.
 
 ---
 
 ## Next Steps (before deploying)
 
-- **Backend** — deploy to AWS Elastic Beanstalk + RDS (or Railway)
-- **Frontend** — deploy to Vercel
-- `WebConfig.java` — update allowed origins with your Vercel URL
-- `api.service.ts` — update `baseUrl` with your deployed backend URL
-- `app.component.html` — add real LinkedIn and GitHub URLs in the contact section
-- `GET /api/contact` — add authentication before going public
+- [ ] Test on mobile and cross-browser (Chrome, Safari, Firefox)
+- [ ] Protect `GET /api/contact` with authentication
+- [ ] Deploy backend to Railway or AWS Elastic Beanstalk + RDS
+- [ ] Deploy frontend to Vercel
+- [ ] Update `WebConfig.java` allowed origins with Vercel URL
+- [ ] Update `baseUrl` in `api.service.ts` with deployed backend URL
+- [ ] Add resume PDF to `portfolio-site/src/assets/vinod-maneti-resume.pdf`
+- [ ] Record video demo for final course submission
