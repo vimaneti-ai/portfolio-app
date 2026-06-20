@@ -19,7 +19,7 @@ A full record of getting this app running locally (June 2026).
 
 ## Step 1 — Configure the backend
 
-Copy the example file and fill in your MySQL password:
+Copy the example file and fill in your credentials:
 ```bash
 cp portfolio-backend/src/main/resources/application.properties.example \
    portfolio-backend/src/main/resources/application.properties
@@ -27,7 +27,11 @@ cp portfolio-backend/src/main/resources/application.properties.example \
 
 Edit the file and set:
 - `spring.datasource.password` — your MySQL root password
-- `allowPublicKeyRetrieval=true` is already in the example (required for this MySQL setup)
+- `spring.mail.username` — your Gmail address
+- `spring.mail.password` — your Gmail App Password (16 characters, not your account password)
+- `app.notification-email` — email address that receives contact form submissions
+
+Generate a Gmail App Password at: **myaccount.google.com → Security → App passwords**
 
 ---
 
@@ -183,11 +187,13 @@ Then `app.module.ts`, `app.component.html`, `app.component.ts`, and `styles.css`
 | **Final** | **Dark — StackHawk with 8 CSS tokens (`--ink`, `--surface`, `--edge`, `--hi`, `--lo`, `--violet`, `--teal`, `--bronze`)** |
 
 UI features added progressively:
-- Animated gradient name in hero
+- Hero name single line: "Vinod Kumar" white, "Maneti" animated violet→teal gradient
+- LinkedIn + GitHub social pill buttons (SVG icons) below hero name
 - Stats counter bar (counts up on page load)
 - Glassmorphism about cards (frosted glass + gradient border)
 - Vertical experience timeline with glowing dot markers
 - Spinning gradient border on project cards on hover
+- Contact form (`<app-contact>`) replaces static mailto link — saves to DB + sends email
 
 ---
 
@@ -216,5 +222,5 @@ git push
 - [ ] Deploy frontend to Vercel
 - [ ] Update `WebConfig.java` allowed origins with Vercel URL
 - [ ] Update `baseUrl` in `api.service.ts` with deployed backend URL
-- [ ] Add resume PDF to `portfolio-site/src/assets/vinod-maneti-resume.pdf`
+- [x] Add resume PDF — `portfolio-site/src/assets/Vinod_Resume.pdf`
 - [ ] Record video demo for final course submission

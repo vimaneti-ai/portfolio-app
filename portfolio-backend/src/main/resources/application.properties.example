@@ -19,3 +19,16 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 
 # ---- Server ----
 server.port=8080
+
+# ---- Gmail SMTP (contact form notifications) ----
+# Use a Gmail App Password, not your account password.
+# Generate one at: myaccount.google.com → Security → App passwords
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=YOUR_GMAIL_ADDRESS
+spring.mail.password=YOUR_GMAIL_APP_PASSWORD
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Email address that receives contact form submissions
+app.notification-email=YOUR_GMAIL_ADDRESS

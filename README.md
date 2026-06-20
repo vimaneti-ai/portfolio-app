@@ -8,10 +8,11 @@ GitHub: **https://github.com/vimaneti-ai/portfolio-app**
 
 ## What this app does
 
-Two features make this a real full-stack app instead of a static page:
+Three features make this a real full-stack app instead of a static page:
 
 1. **Projects from a database** — the Projects section loads dynamically from `GET /api/projects`
 2. **Contact form** — Angular reactive form → Spring Boot REST API → MySQL
+3. **Email notifications** — every contact submission triggers a Gmail notification to the site owner and a confirmation reply to the sender (JavaMailSender + Gmail SMTP, async)
 
 ---
 
@@ -86,11 +87,13 @@ StackHawk-inspired dark theme with 8 CSS tokens in `portfolio-site/src/styles.cs
 | `--bronze` | `#b87848` | Project kickers, metric pills |
 
 UI features:
-- Animated gradient hero name (violet→teal wave)
+- Hero name single line: "Vinod Kumar" in white, "Maneti" in animated violet→teal gradient
+- LinkedIn + GitHub social pill buttons with SVG icons in the hero
 - Stats counter bar — counts up on load (6+ years, 2 companies, 4 projects)
 - Glassmorphism about cards with gradient border
 - Vertical experience timeline with glowing dot markers
 - Spinning gradient border on project cards on hover
+- Contact form with validation, DB persistence, and email notification
 
 ---
 
@@ -160,5 +163,5 @@ App runs at `http://localhost:4200`.
 - Update allowed origins in `WebConfig.java` with your Vercel URL
 - Update `baseUrl` in `portfolio-site/src/app/services/api.service.ts` with deployed backend URL
 - Protect `GET /api/contact` with authentication
-- Add resume PDF to `portfolio-site/src/assets/vinod-maneti-resume.pdf`
-- Update LinkedIn and GitHub URLs in `app.component.html` contact section (already done)
+- Resume PDF is at `portfolio-site/src/assets/Vinod_Resume.pdf` (already in place)
+- Set `spring.mail.*` and `app.notification-email` in `application.properties` for email to work

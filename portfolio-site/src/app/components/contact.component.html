@@ -12,7 +12,7 @@
       <div class="row">
         <div class="field">
           <label for="firstName">First name *</label>
-          <input id="firstName" type="text" formControlName="firstName" />
+          <input id="firstName" type="text" formControlName="firstName" placeholder="Jane" />
           <small class="err" *ngIf="firstName?.touched && firstName?.errors?.['required']">
             First name is required
           </small>
@@ -23,7 +23,7 @@
 
         <div class="field">
           <label for="lastName">Last name *</label>
-          <input id="lastName" type="text" formControlName="lastName" />
+          <input id="lastName" type="text" formControlName="lastName" placeholder="Doe" />
           <small class="err" *ngIf="lastName?.touched && lastName?.errors?.['required']">
             Last name is required
           </small>
@@ -35,7 +35,7 @@
 
       <div class="field">
         <label for="email">Email *</label>
-        <input id="email" type="email" formControlName="email" />
+        <input id="email" type="email" formControlName="email" placeholder="jane@example.com" />
         <small class="err" *ngIf="email?.touched && email?.errors?.['required']">
           Email is required
         </small>
@@ -46,7 +46,7 @@
 
       <div class="field">
         <label for="message">Message *</label>
-        <textarea id="message" rows="5" formControlName="message"></textarea>
+        <textarea id="message" rows="5" formControlName="message" placeholder="Hi Vinod, I'd love to connect about…"></textarea>
         <small class="err" *ngIf="message?.touched && message?.errors?.['required']">
           Message is required
         </small>

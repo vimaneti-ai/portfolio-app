@@ -8,9 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Browser → Angular (portfolio-site) → Spring Boot (portfolio-backend) → MySQL (portfolio-db)
 ```
 
-- **portfolio-site** — The live Angular 17 app at `portfolio-app/portfolio-site/` (inside this repo). Uses `NgModule`-based architecture with standalone components imported directly into `AppModule`. All page layout (nav, hero, about, experience, skills, contact, footer) lives in `app.component.html`; projects are loaded dynamically via `<app-projects>`. Global styles (dark theme, CSS variables, all component styles) are in `src/styles.css`. **Always edit files here — not in `portfolio-frontend/`.**
+- **portfolio-site** — The live Angular 17 app at `portfolio-app/portfolio-site/` (inside this repo). Uses `NgModule`-based architecture with standalone components imported directly into `AppModule`. All page layout (nav, hero, about, experience, skills) lives in `app.component.html`; projects load dynamically via `<app-projects>` and the contact form via `<app-contact>`. Global styles (dark theme, CSS variables, all component styles) are in `src/styles.css`. **Always edit files here — not in `portfolio-frontend/`.**
 - **portfolio-frontend** — Source components only (not a runnable app). These were copied into `portfolio-site` during setup. Do not edit here.
-- **portfolio-backend** — Spring Boot 3 / Java 17 REST API. Standard layered structure: Controller → Service → Repository (Spring Data JPA). CORS is configured in `WebConfig.java` and must include the deployed Vercel URL for production.
+- **portfolio-backend** — Spring Boot 3 / Java 17 REST API. Standard layered structure: Controller → Service → Repository (Spring Data JPA). `@EnableAsync` is set on `PortfolioApplication`. CORS is configured in `WebConfig.java` and must include the deployed Vercel URL for production.
 - **portfolio-db** — `schema.sql` creates `portfolio_db` and its two tables, then seeds the project rows. Hibernate is set to `validate` mode, so the schema must exist before the backend starts.
 
 The `Project.tags` field is a comma-separated string in both the database and the TypeScript model — `tagList()` in `projects.component.ts` splits it at render time.
@@ -31,11 +31,21 @@ The site uses a StackHawk-inspired dark theme with 8 CSS custom properties in `s
 ```
 
 Key UI features implemented:
-- Animated gradient hero name (violet→teal wave on loop)
+- Hero name single line: "Vinod Kumar" in white (`--hi`), "Maneti" in animated violet→teal gradient
+- LinkedIn and GitHub social pill buttons (SVG icons) below the hero name
 - Stats counter bar (6+ years, 2 companies, 4 projects — counts up on load)
 - Glassmorphism about cards with gradient border on hover
 - Vertical timeline for experience with glowing violet dot markers
 - Spinning gradient border on project cards (violet→teal→bronze) on hover
+- Contact form (`<app-contact>`) wired into the page — saves to MySQL and sends email
+
+## Email (contact form notifications)
+
+`ContactEmailService.java` uses `JavaMailSender` (Gmail SMTP) to send two emails on every contact form submission:
+1. A notification to `vinodben594@gmail.com` with the sender's details
+2. A confirmation reply to the person who submitted the form
+
+Both sends are `@Async` — the API response is not delayed. Requires `spring.mail.*` and `app.notification-email` in `application.properties` (see `application.properties.example`). The Gmail password is a 16-character App Password — not the account password.
 
 ## Local setup
 
@@ -106,4 +116,4 @@ Repository: **https://github.com/vimaneti-ai/portfolio-app**
 - `WebConfig.java` — replace `https://your-portfolio.vercel.app` with the real Vercel URL
 - `portfolio-site/src/app/services/api.service.ts` — replace `http://localhost:8080/api` with the deployed backend URL
 - `GET /api/contact` is unprotected — add authentication before going public
-- Add resume PDF to `portfolio-site/src/assets/vinod-maneti-resume.pdf` for the Résumé button to work
+- Resume PDF is at `portfolio-site/src/assets/Vinod_Resume.pdf` — nav Résumé button links here
