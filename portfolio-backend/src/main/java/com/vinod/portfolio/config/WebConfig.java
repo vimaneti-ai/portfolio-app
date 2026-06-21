@@ -18,8 +18,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOrigins(
-                        "http://localhost:4200",                 // Angular dev server
-                        "https://your-portfolio.vercel.app"      // TODO: your deployed frontend
+                        "http://localhost:4200",
+                        "http://vinod-portfolio-2026.s3-website.us-east-2.amazonaws.com"
                 )
                 .allowedMethods("GET", "POST")
                 .allowedHeaders("*");
