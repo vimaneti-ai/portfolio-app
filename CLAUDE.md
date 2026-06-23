@@ -4,13 +4,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
+### Local development
 ```
-Browser → Angular (portfolio-site) → Spring Boot (portfolio-backend) → MySQL (portfolio-db)
+Browser → Angular (:4200) → Spring Boot (:8080) → MySQL (local)
 ```
+
+### Production (AWS — live at https://d3v7l3ap9v1bme.cloudfront.net)
+```
+Browser
+   |
+   v
+CloudFront (HTTPS)  E2EZ2L1KSZ1EQ8 — d3v7l3ap9v1bme.cloudfront.net
+   |-- /* (default)  → S3 static website (Angular build, HTTP only from CF side)
+   |-- /api/*        → EC2 t3.micro :8080 via EC2 DNS hostname
+                          |
+                          v
+                     RDS MySQL db.t4g.micro (portfolio-db.cduecko8i86c.us-east-2.rds.amazonaws.com)
+```
+
+EC2 Elastic IP: `3.150.38.140` (fixed — does not change on stop/start)
 
 - **portfolio-site** — The live Angular 17 app at `portfolio-app/portfolio-site/` (inside this repo). Uses `NgModule`-based architecture with standalone components imported directly into `AppModule`. All page layout (nav, hero, about, experience, skills) lives in `app.component.html`; projects load dynamically via `<app-projects>` and the contact form via `<app-contact>`. Global styles (dark theme, CSS variables, all component styles) are in `src/styles.css`. **Always edit files here — not in `portfolio-frontend/`.**
 - **portfolio-frontend** — Source components only (not a runnable app). These were copied into `portfolio-site` during setup. Do not edit here.
-- **portfolio-backend** — Spring Boot 3 / Java 17 REST API. Standard layered structure: Controller → Service → Repository (Spring Data JPA). `@EnableAsync` is set on `PortfolioApplication`. CORS is configured in `WebConfig.java` and must include the deployed Vercel URL for production.
+- **portfolio-backend** — Spring Boot 3 / Java 17 REST API. Standard layered structure: Controller → Service → Repository (Spring Data JPA). `@EnableAsync` is set on `PortfolioApplication`. CORS is configured in `WebConfig.java` — currently allows `http://localhost:4200` and `https://d3v7l3ap9v1bme.cloudfront.net`.
 - **portfolio-db** — `schema.sql` creates `portfolio_db` and its two tables, then seeds the project rows. Hibernate is set to `validate` mode, so the schema must exist before the backend starts.
 
 The `Project.tags` field is a comma-separated string in both the database and the TypeScript model — `tagList()` in `projects.component.ts` splits it at render time.
@@ -111,9 +127,34 @@ Repository: **https://github.com/vimaneti-ai/portfolio-app**
 
 `application.properties` is gitignored — credentials are never committed.
 
-## Key deployment TODOs
+## Production deployment (AWS)
 
-- `WebConfig.java` — replace `https://your-portfolio.vercel.app` with the real Vercel URL
-- `portfolio-site/src/app/services/api.service.ts` — replace `http://localhost:8080/api` with the deployed backend URL
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full step-by-step guide.
+
+Key resources:
+- **CloudFront:** `d3v7l3ap9v1bme.cloudfront.net` (distribution `E2EZ2L1KSZ1EQ8`)
+- **EC2 Elastic IP:** `3.150.38.140` (SSH key: `~/.ssh/portfolio-key.pem`)
+- **RDS endpoint:** `portfolio-db.cduecko8i86c.us-east-2.rds.amazonaws.com`
+- **S3 bucket:** `vinod-portfolio-2026` (versioning enabled)
+
+Redeployment — after any code change:
+```bash
+# Backend
+mvn package -DskipTests
+scp -i ~/.ssh/portfolio-key.pem target/portfolio-1.0.0.jar ec2-user@3.150.38.140:~/
+ssh -i ~/.ssh/portfolio-key.pem ec2-user@3.150.38.140
+  pkill -f portfolio-1.0.0.jar && sleep 3
+  nohup java -jar portfolio-1.0.0.jar --spring.config.location=application.properties > app.log 2>&1 &
+
+# Frontend (after backend redeploy; api.service.ts already points to CloudFront)
+ng build --configuration production
+# Re-upload dist/portfolio-site/browser/ to S3
+# Then create CloudFront invalidation: /*
+```
+
+## Remaining TODOs
+
 - `GET /api/contact` is unprotected — add authentication before going public
+- Set Spring Boot to auto-start on EC2 reboot (systemd service) — currently must restart manually after EC2 stop/start
+- Custom domain — pending GitHub Student Developer Pack approval (applied June 20, 2026)
 - Resume PDF is at `portfolio-site/src/assets/Vinod_Resume.pdf` — nav Résumé button links here

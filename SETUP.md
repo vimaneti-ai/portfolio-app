@@ -214,13 +214,20 @@ git push
 
 ---
 
-## Next Steps (before deploying)
+## Next Steps
 
-- [ ] Test on mobile and cross-browser (Chrome, Safari, Firefox)
-- [ ] Protect `GET /api/contact` with authentication
-- [ ] Deploy backend to Railway or AWS Elastic Beanstalk + RDS
-- [ ] Deploy frontend to Vercel
-- [ ] Update `WebConfig.java` allowed origins with Vercel URL
-- [ ] Update `baseUrl` in `api.service.ts` with deployed backend URL
+- [x] Deploy backend to AWS EC2 + RDS (done June 2026)
+- [x] Deploy frontend to AWS S3 static website (done June 2026)
+- [x] Set up Elastic IP so EC2 IP never changes (3.150.38.140)
+- [x] Set up HTTPS via CloudFront (https://d3v7l3ap9v1bme.cloudfront.net)
+- [x] Update `WebConfig.java` allowed origins with CloudFront URL
+- [x] Update `baseUrl` in `api.service.ts` to CloudFront URL
 - [x] Add resume PDF — `portfolio-site/src/assets/Vinod_Resume.pdf`
-- [ ] Record video demo for final course submission
+- [x] Enable S3 versioning for rollback
+- [ ] Protect `GET /api/contact` with authentication
+- [ ] Set Spring Boot to auto-start on EC2 reboot (systemd service)
+- [ ] Custom domain — pending GitHub Student Developer Pack (applied June 20, 2026)
+- [ ] Test on mobile and cross-browser (Chrome, Safari, Firefox)
+- [ ] Record video demo for final course submission (deadline August 2, 2026)
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the full AWS deployment guide.

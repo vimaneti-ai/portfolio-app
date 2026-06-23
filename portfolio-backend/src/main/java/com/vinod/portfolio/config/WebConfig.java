@@ -19,8 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOrigins(
                         "http://localhost:4200",
-                        "http://vinod-portfolio-2026.s3-website.us-east-2.amazonaws.com",
-                        "http://3.150.38.140:8080"
+                        "https://d3v7l3ap9v1bme.cloudfront.net"
                 )
                 .allowedMethods("GET", "POST")
                 .allowedHeaders("*");

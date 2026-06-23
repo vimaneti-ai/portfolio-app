@@ -1,6 +1,8 @@
 # Portfolio Website — Full-Stack Build
 
-A personal portfolio site built with **Angular 17 + Spring Boot + MySQL**.
+A personal portfolio site built with **Angular 17 + Spring Boot + MySQL**, deployed on AWS.
+
+**Live:** https://d3v7l3ap9v1bme.cloudfront.net
 
 GitHub: **https://github.com/vimaneti-ai/portfolio-app**
 
@@ -18,6 +20,7 @@ Three features make this a real full-stack app instead of a static page:
 
 ## Architecture
 
+### Local development
 ```
    Browser
       |
@@ -29,6 +32,19 @@ Three features make this a real full-stack app instead of a static page:
       |   JPA / Hibernate
       v
   MySQL database    (contact_messages, projects)
+```
+
+### Production (AWS)
+```
+   Browser (HTTPS)
+      |
+      v
+  CloudFront  d3v7l3ap9v1bme.cloudfront.net
+      |-- /* (default)   S3 bucket (Angular static build)
+      |-- /api/*         EC2 t3.micro  3.150.38.140 :8080
+                              |
+                              v
+                         RDS MySQL db.t4g.micro
 ```
 
 ---
@@ -158,10 +174,28 @@ App runs at `http://localhost:4200`.
 
 ---
 
-## Before deploying
+## Deployment
 
-- Update allowed origins in `WebConfig.java` with your Vercel URL
-- Update `baseUrl` in `portfolio-site/src/app/services/api.service.ts` with deployed backend URL
+The app is live on AWS. See [DEPLOYMENT.md](DEPLOYMENT.md) for the full setup guide and all issues/fixes encountered.
+
+**To redeploy after a code change:**
+
+Backend:
+```bash
+mvn package -DskipTests
+scp -i ~/.ssh/portfolio-key.pem target/portfolio-1.0.0.jar ec2-user@3.150.38.140:~/
+# SSH in, pkill old process, nohup new jar
+```
+
+Frontend:
+```bash
+ng build --configuration production
+# Upload dist/portfolio-site/browser/ to S3 bucket vinod-portfolio-2026
+# Create CloudFront invalidation /* to bust the cache
+```
+
+## Remaining TODOs
+
 - Protect `GET /api/contact` with authentication
-- Resume PDF is at `portfolio-site/src/assets/Vinod_Resume.pdf` (already in place)
-- Set `spring.mail.*` and `app.notification-email` in `application.properties` for email to work
+- Set Spring Boot to auto-start on EC2 reboot (systemd service)
+- Custom domain — pending GitHub Student Developer Pack (applied June 20, 2026)

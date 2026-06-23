@@ -11,7 +11,7 @@ import { Project, ContactRequest, ContactResponse } from '../models/models';
 export class ApiService {
 
   // In production, point this at your deployed backend URL.
-  private readonly baseUrl = 'http://3.150.38.140:8080/api';
+  private readonly baseUrl = 'https://d3v7l3ap9v1bme.cloudfront.net/api';
 
   constructor(private http: HttpClient) {}
 
