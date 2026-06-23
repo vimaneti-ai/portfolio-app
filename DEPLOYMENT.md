@@ -328,3 +328,20 @@ ng build --configuration production
 - [ ] Set Spring Boot to auto-start on EC2 reboot (systemd service)
 - [ ] Protect `GET /api/contact` with authentication
 - [ ] Record video demo for final course submission
+
+---
+
+## Future Improvements
+
+### codebase-memory-mcp
+A high-performance MCP server that indexes the codebase into a persistent knowledge graph for faster AI-assisted development.
+
+- **Repo:** https://github.com/DeusData/codebase-memory-mcp
+- **Why:** Reduces token usage by ~99% and enables sub-millisecond code lookups — useful when the project grows larger
+- **When to implement:** When the codebase grows significantly (multiple microservices, larger team)
+- **Installation (when ready):**
+  ```bash
+  pip install codebase-memory-mcp
+  codebase-memory-mcp install   # auto-detects Claude Code and registers itself
+  ```
+- **Note:** Not needed at current project size (~20 files) — revisit if codebase expands beyond 100+ files
