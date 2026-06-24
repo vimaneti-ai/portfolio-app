@@ -61,7 +61,11 @@ Key UI features implemented:
 1. A notification to `vinodben594@gmail.com` with the sender's details
 2. A confirmation reply to the person who submitted the form
 
-Both sends are `@Async` — the API response is not delayed. Requires `spring.mail.*` and `app.notification-email` in `application.properties` (see `application.properties.example`). The Gmail password is a 16-character App Password — not the account password.
+Both sends are `@Async` — the API response is not delayed. Local credentials are
+stored in the external, gitignored `portfolio-backend/config/application.properties`
+(created from `application.properties.example`). No real `application.properties`
+belongs under `src/main/resources`, because Maven would package it inside the JAR.
+The Gmail password is a 16-character App Password — not the account password.
 
 ## Local setup
 
@@ -90,10 +94,15 @@ cd portfolio-backend
 mvn spring-boot:run          # dev server on :8080
 mvn test                     # run all tests
 mvn test -Dtest=ClassName    # run a single test class
-mvn package                  # build JAR
+mvn clean package            # remove old output and build JAR
 ```
 
-Set your MySQL password in `portfolio-backend/src/main/resources/application.properties` before starting. Use `application.properties.example` as a template.
+Create `portfolio-backend/config/application.properties` from
+`src/main/resources/application.properties.example`, set its permissions to
+`600`, and add the local credentials there. Run from `portfolio-backend/` so
+Spring Boot automatically loads the external `config/application.properties`.
+After packaging, `jar tf target/portfolio-1.0.0.jar | grep application.properties`
+must list only `application.properties.example`.
 
 ### Frontend
 ```bash
@@ -125,7 +134,8 @@ curl "http://localhost:8080/api/projects?category=backend"
 
 Repository: **https://github.com/vimaneti-ai/portfolio-app**
 
-`application.properties` is gitignored — credentials are never committed.
+`portfolio-backend/config/application.properties` is gitignored and external to
+the JAR. Credentials must never be placed under `src/main/resources` or committed.
 
 ## Production deployment (AWS)
 
@@ -140,7 +150,8 @@ Key resources:
 Redeployment — after any code change:
 ```bash
 # Backend
-mvn package -DskipTests
+mvn clean package -DskipTests
+jar tf target/portfolio-1.0.0.jar | grep application.properties
 scp -i ~/.ssh/portfolio-key.pem target/portfolio-1.0.0.jar ec2-user@3.150.38.140:~/
 ssh -i ~/.ssh/portfolio-key.pem ec2-user@3.150.38.140
   pkill -f portfolio-1.0.0.jar && sleep 3

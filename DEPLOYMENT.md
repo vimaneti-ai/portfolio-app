@@ -125,12 +125,18 @@ Expected: `contact_messages`, `projects` tables and 4 project rows.
 ```bash
 export PATH=/usr/local/maven/bin:$PATH
 cd /Users/vinod/Projects/portfolio-app/portfolio-backend
-mvn package -DskipTests
+mvn clean package -DskipTests
+jar tf target/portfolio-1.0.0.jar | grep application.properties
 ```
+
+Expected: only `BOOT-INF/classes/application.properties.example`. If
+`BOOT-INF/classes/application.properties` appears, stop: a local secret-bearing
+configuration file is still under `src/main/resources`.
 
 ### 5b — Create production application.properties (on your Mac)
 
 ```bash
+umask 077
 cat > /tmp/application.properties << 'EOF'
 spring.application.name=portfolio
 spring.datasource.url=jdbc:mysql://portfolio-db.cduecko8i86c.us-east-2.rds.amazonaws.com:3306/portfolio_db?useSSL=true&serverTimezone=UTC
@@ -161,6 +167,14 @@ scp -i ~/.ssh/portfolio-key.pem \
 scp -i ~/.ssh/portfolio-key.pem \
   /tmp/application.properties \
   ec2-user@3.150.38.140:~/
+
+rm /tmp/application.properties
+```
+
+The production configuration remains external to the JAR. On EC2, protect it
+before starting the application:
+```bash
+chmod 600 ~/application.properties
 ```
 
 ### 5d — Install Java and start the app (on EC2)
@@ -430,7 +444,8 @@ When you make code changes and need to redeploy:
 # Mac — build and upload
 cd /Users/vinod/Projects/portfolio-app/portfolio-backend
 export PATH=/usr/local/maven/bin:$PATH
-mvn package -DskipTests
+mvn clean package -DskipTests
+jar tf target/portfolio-1.0.0.jar | grep application.properties
 scp -i ~/.ssh/portfolio-key.pem target/portfolio-1.0.0.jar ec2-user@3.150.38.140:~/
 
 # EC2 — restart

@@ -17,21 +17,39 @@ A full record of getting this app running locally (June 2026).
 
 ---
 
-## Step 1 — Configure the backend
+## Step 1 — Configure the backend safely
 
-Copy the example file and fill in your credentials:
+Real credentials live in an external file, not under `src/main/resources`. This
+prevents Maven from embedding the MySQL and Gmail passwords in the JAR.
+
+Create the local configuration:
 ```bash
+mkdir -p portfolio-backend/config
 cp portfolio-backend/src/main/resources/application.properties.example \
-   portfolio-backend/src/main/resources/application.properties
+   portfolio-backend/config/application.properties
+chmod 600 portfolio-backend/config/application.properties
 ```
 
-Edit the file and set:
+Edit `portfolio-backend/config/application.properties` and set:
 - `spring.datasource.password` — your MySQL root password
 - `spring.mail.username` — your Gmail address
 - `spring.mail.password` — your Gmail App Password (16 characters, not your account password)
 - `app.notification-email` — email address that receives contact form submissions
 
 Generate a Gmail App Password at: **myaccount.google.com → Security → App passwords**
+
+The external file is excluded by `.gitignore`. Always run Spring Boot from the
+`portfolio-backend/` directory so it automatically loads `config/application.properties`.
+
+After building, verify that credentials were not packaged:
+```bash
+cd portfolio-backend
+mvn clean package
+jar tf target/portfolio-1.0.0.jar | grep application.properties
+```
+
+Expected: `BOOT-INF/classes/application.properties.example` only. The output
+must not include `BOOT-INF/classes/application.properties`.
 
 ---
 
@@ -201,7 +219,8 @@ UI features added progressively:
 
 Repository: **https://github.com/vimaneti-ai/portfolio-app**
 
-`application.properties` is excluded via `.gitignore` — credentials are never pushed.
+`portfolio-backend/config/application.properties` is excluded via `.gitignore`,
+has user-only permissions (`chmod 600`), and is not packaged into the JAR.
 `application.properties.example` is committed as a setup template.
 
 Push changes:

@@ -54,6 +54,8 @@ Three features make this a real full-stack app instead of a static page:
 ```
 portfolio-app/
   portfolio-backend/        Spring Boot app (Java 17, Maven)
+    config/
+      application.properties          Local secrets (gitignored, never packaged)
     src/main/java/com/vinod/portfolio/
       controller/           REST endpoints (contact, projects, error handling)
       service/              business logic
@@ -61,7 +63,6 @@ portfolio-app/
       model/                JPA entities (ContactMessage, Project)
       config/               CORS configuration (WebConfig.java)
     src/main/resources/
-      application.properties          MySQL connection (gitignored)
       application.properties.example  Template — copy and fill in credentials
     pom.xml
 
@@ -129,11 +130,18 @@ UI features:
 
 ### 1. Database
 
-Copy the example properties file and set your password:
+Create the external local configuration and restrict its permissions:
 ```bash
+mkdir -p portfolio-backend/config
 cp portfolio-backend/src/main/resources/application.properties.example \
-   portfolio-backend/src/main/resources/application.properties
+   portfolio-backend/config/application.properties
+chmod 600 portfolio-backend/config/application.properties
 ```
+
+Fill in the MySQL and Gmail values in `portfolio-backend/config/application.properties`.
+This file is gitignored and remains outside `src/main/resources`, so Maven does not
+package the credentials inside the JAR. Spring Boot loads `config/application.properties`
+automatically when started from `portfolio-backend/`.
 
 Load the schema:
 ```bash
@@ -182,10 +190,14 @@ The app is live on AWS. See [DEPLOYMENT.md](DEPLOYMENT.md) for the full setup gu
 
 Backend:
 ```bash
-mvn package -DskipTests
+mvn clean package -DskipTests
+jar tf target/portfolio-1.0.0.jar | grep application.properties
 scp -i ~/.ssh/portfolio-key.pem target/portfolio-1.0.0.jar ec2-user@3.150.38.140:~/
 # SSH in, pkill old process, nohup new jar
 ```
+
+The JAR check should list only `application.properties.example`, never
+`BOOT-INF/classes/application.properties`.
 
 Frontend:
 ```bash
