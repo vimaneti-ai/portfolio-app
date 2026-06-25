@@ -10,8 +10,9 @@ import { Project, ContactRequest, ContactResponse } from '../models/models';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
 
-  // In production, point this at your deployed backend URL.
-  private readonly baseUrl = 'https://d3v7l3ap9v1bme.cloudfront.net/api';
+  // Use a relative API path so the app works on both the CloudFront URL
+  // and the custom domain without cross-origin/CORS issues.
+  private readonly baseUrl = '/api';
 
   constructor(private http: HttpClient) {}
 

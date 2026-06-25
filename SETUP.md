@@ -96,6 +96,18 @@ Open `http://localhost:4200`.
 > The original `/Users/vinod/Projects/portfolio-site` directory has been deleted.
 > Always edit and run from `portfolio-app/portfolio-site/`.
 
+For production, `portfolio-site/src/app/services/api.service.ts` uses:
+```typescript
+private readonly baseUrl = '/api';
+```
+
+That relative path is intentional. It lets the same Angular build call:
+- `http://localhost:4200/api/...` in local/proxy-style testing if configured
+- `https://www.vinodmaneti.com/api/...` in production
+
+Do not change it back to the old hardcoded CloudFront API URL unless you also
+change the deployment/CORS design.
+
 ---
 
 ## Issues & Fixes
@@ -149,6 +161,32 @@ Angular 22 requires Node 22+. Machine has Node 20.12.1.
 **Fix:** Install Angular 17 instead:
 ```bash
 sudo npm install -g @angular/cli@17
+```
+
+---
+
+### Angular build: `Cannot find module './bootstrap'`
+`npm run build` failed with:
+```text
+Error: Cannot find module './bootstrap'
+Require stack:
+- /Users/vinod/Projects/portfolio-app/portfolio-site/node_modules/.bin/ng
+```
+
+**Cause:** `node_modules` was corrupted/incomplete. Running `npm install` alone
+said "up to date" and did not repair it.
+
+**Fix:**
+```bash
+cd /Users/vinod/Projects/portfolio-app/portfolio-site
+rm -rf node_modules
+npm ci
+npm run build
+```
+
+The build output is:
+```text
+portfolio-site/dist/portfolio-site/browser/
 ```
 
 ---
@@ -231,6 +269,34 @@ git commit -m "your message"
 git push
 ```
 
+## Custom domain status
+
+Current live URLs:
+
+```text
+https://www.vinodmaneti.com
+https://vinodmaneti.com  → redirects to https://www.vinodmaneti.com
+```
+
+The old CloudFront URL still works as a fallback:
+
+```text
+https://d3v7l3ap9v1bme.cloudfront.net
+```
+
+Important production notes:
+- ACM certificate was issued in `us-east-1` for both `vinodmaneti.com` and
+  `www.vinodmaneti.com`.
+- IONOS DNS has `www` as a CNAME to CloudFront.
+- IONOS root forwarding redirects `vinodmaneti.com` to
+  `https://www.vinodmaneti.com`.
+- IONOS included SSL Starter Wildcard was activated so the root HTTPS redirect
+  works without `ERR_SSL_PROTOCOL_ERROR`.
+- Spring Boot CORS now allows localhost, the CloudFront URL, and both custom
+  domain origins.
+- Contact form was verified after the backend redeploy and returned:
+  `Thanks for reaching out. I'll get back to you soon.`
+
 ---
 
 ## Next Steps
@@ -239,13 +305,16 @@ git push
 - [x] Deploy frontend to AWS S3 static website (done June 2026)
 - [x] Set up Elastic IP so EC2 IP never changes (3.150.38.140)
 - [x] Set up HTTPS via CloudFront (https://d3v7l3ap9v1bme.cloudfront.net)
-- [x] Update `WebConfig.java` allowed origins with CloudFront URL
-- [x] Update `baseUrl` in `api.service.ts` to CloudFront URL
+- [x] Register and connect custom domain (`www.vinodmaneti.com`)
+- [x] Configure root redirect (`vinodmaneti.com` → `www.vinodmaneti.com`)
+- [x] Update `WebConfig.java` allowed origins with CloudFront + custom domain URLs
+- [x] Update `baseUrl` in `api.service.ts` to relative `/api`
 - [x] Add resume PDF — `portfolio-site/src/assets/Vinod_Resume.pdf`
 - [x] Enable S3 versioning for rollback
 - [ ] Protect `GET /api/contact` with authentication
 - [ ] Set Spring Boot to auto-start on EC2 reboot (systemd service)
-- [ ] Custom domain — pending GitHub Student Developer Pack (applied June 20, 2026)
+- [ ] Restrict public EC2 `8080` exposure
+- [ ] Review npm audit findings and update frontend dependencies safely
 - [ ] Test on mobile and cross-browser (Chrome, Safari, Firefox)
 - [ ] Record video demo for final course submission (deadline August 2, 2026)
 

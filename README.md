@@ -2,7 +2,9 @@
 
 A personal portfolio site built with **Angular 17 + Spring Boot + MySQL**, deployed on AWS.
 
-**Live:** https://d3v7l3ap9v1bme.cloudfront.net
+**Live:** https://www.vinodmaneti.com  
+Root redirect: https://vinodmaneti.com → https://www.vinodmaneti.com  
+CloudFront fallback URL: https://d3v7l3ap9v1bme.cloudfront.net
 
 GitHub: **https://github.com/vimaneti-ai/portfolio-app**
 
@@ -39,7 +41,7 @@ Three features make this a real full-stack app instead of a static page:
    Browser (HTTPS)
       |
       v
-  CloudFront  d3v7l3ap9v1bme.cloudfront.net
+  CloudFront  www.vinodmaneti.com
       |-- /* (default)   S3 bucket (Angular static build)
       |-- /api/*         EC2 t3.micro  3.150.38.140 :8080
                               |
@@ -169,6 +171,10 @@ ng serve
 
 App runs at `http://localhost:4200`.
 
+In production, the Angular app uses a relative API base URL (`/api`) from
+`portfolio-site/src/app/services/api.service.ts`. This lets the same build work
+on the custom domain and the CloudFront domain without browser CORS errors.
+
 ---
 
 ## API reference
@@ -190,6 +196,7 @@ The app is live on AWS. See [DEPLOYMENT.md](DEPLOYMENT.md) for the full setup gu
 
 Backend:
 ```bash
+cd /Users/vinod/Projects/portfolio-app/portfolio-backend
 mvn clean package -DskipTests
 jar tf target/portfolio-1.0.0.jar | grep application.properties
 scp -i ~/.ssh/portfolio-key.pem target/portfolio-1.0.0.jar ec2-user@3.150.38.140:~/
@@ -201,13 +208,26 @@ The JAR check should list only `application.properties.example`, never
 
 Frontend:
 ```bash
-ng build --configuration production
+npm run build
 # Upload dist/portfolio-site/browser/ to S3 bucket vinod-portfolio-2026
 # Create CloudFront invalidation /* to bust the cache
 ```
+
+If `npm run build` fails with `Cannot find module './bootstrap'`, reinstall the
+frontend dependencies:
+```bash
+cd /Users/vinod/Projects/portfolio-app/portfolio-site
+rm -rf node_modules
+npm ci
+npm run build
+```
+
+If the AWS CLI is not installed locally, upload the contents of
+`dist/portfolio-site/browser/` manually in the S3 console, then create a
+CloudFront invalidation for `/*`.
 
 ## Remaining TODOs
 
 - Protect `GET /api/contact` with authentication
 - Set Spring Boot to auto-start on EC2 reboot (systemd service)
-- Custom domain — pending GitHub Student Developer Pack (applied June 20, 2026)
+- Review npm audit findings and update frontend dependencies safely

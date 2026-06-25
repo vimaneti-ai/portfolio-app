@@ -2,7 +2,9 @@
 
 Full record of deploying the portfolio app to AWS (June 2026).
 
-**Live URL:** https://d3v7l3ap9v1bme.cloudfront.net
+**Live URL:** https://www.vinodmaneti.com  
+Root redirect: https://vinodmaneti.com → https://www.vinodmaneti.com  
+CloudFront fallback URL: https://d3v7l3ap9v1bme.cloudfront.net
 
 ---
 
@@ -12,7 +14,7 @@ Full record of deploying the portfolio app to AWS (June 2026).
 Browser (HTTPS)
    |
    v
-CloudFront  d3v7l3ap9v1bme.cloudfront.net  (distribution E2EZ2L1KSZ1EQ8)
+CloudFront  www.vinodmaneti.com / d3v7l3ap9v1bme.cloudfront.net  (distribution E2EZ2L1KSZ1EQ8)
    |-- /* (default)   →  S3 bucket: vinod-portfolio-2026  (Angular static build)
    |-- /api/*         →  EC2 t3.micro ec2-3-150-38-140.us-east-2.compute.amazonaws.com :8080
                               |
@@ -27,7 +29,8 @@ CloudFront sits in front of everything. The browser only ever talks HTTPS to Clo
 ## AWS Account
 
 - Provider: **AWS Educate** — login at awseducate.com with `vinodkumarmaneti@my.unt.edu`
-- Region: **us-east-2 (Ohio)** — all resources must be in the same region
+- Region: **us-east-2 (Ohio)** for EC2/RDS/S3. Exception: the ACM certificate
+  used by CloudFront must be created in **us-east-1 (N. Virginia)**.
 - Credits: $100 USD, valid 185 days from June 2026
 - No credit card required (Educate account)
 
@@ -47,6 +50,8 @@ CloudFront sits in front of everything. The browser only ever talks HTTPS to Clo
 | S3 bucket | `vinod-portfolio-2026` | Static website hosting, versioning enabled |
 | S3 website URL | `vinod-portfolio-2026.s3-website.us-east-2.amazonaws.com` | HTTP only — access via CloudFront instead |
 | CloudFront distribution | `E2EZ2L1KSZ1EQ8` | `d3v7l3ap9v1bme.cloudfront.net` |
+| Custom domain | `vinodmaneti.com` | Registered at IONOS; root redirects to `www` |
+| ACM certificate | `c40ade75-49ae-4a42-9354-d663e6048cde` | Issued in `us-east-1`; covers `vinodmaneti.com` and `www.vinodmaneti.com` |
 | Key pair | `portfolio-key` | `~/.ssh/portfolio-key.pem` |
 
 ---
@@ -217,7 +222,9 @@ In `portfolio-backend/src/main/java/com/vinod/portfolio/config/WebConfig.java`:
 ```java
 .allowedOrigins(
     "http://localhost:4200",
-    "https://d3v7l3ap9v1bme.cloudfront.net"
+    "https://d3v7l3ap9v1bme.cloudfront.net",
+    "https://www.vinodmaneti.com",
+    "https://vinodmaneti.com"
 )
 ```
 
@@ -227,14 +234,18 @@ Rebuild and redeploy the JAR after this change (repeat Steps 5a, 5c, 5d restart)
 
 In `portfolio-site/src/app/services/api.service.ts`:
 ```typescript
-private readonly baseUrl = 'https://d3v7l3ap9v1bme.cloudfront.net/api';
+private readonly baseUrl = '/api';
 ```
+
+Using `/api` makes the browser call the same domain currently serving the
+Angular app, for example `https://www.vinodmaneti.com/api/projects`. This avoids
+cross-origin/CORS problems when using the custom domain.
 
 ### 6c — Build Angular
 
 ```bash
 cd /Users/vinod/Projects/portfolio-app/portfolio-site
-ng build --configuration production
+npm run build
 ```
 
 Output goes to: `dist/portfolio-site/browser/`
@@ -325,7 +336,9 @@ CloudFront gives HTTPS to the whole site. The browser calls CloudFront; CloudFro
    - Path pattern: `/api/*`
    - Origin: select the EC2 origin
    - Cache policy: **CachingDisabled** (API responses must never be cached)
-   - **Allow all HTTP methods** (POST is needed for contact form)
+   - **Allowed HTTP methods:** `GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE`
+     (POST is needed for the contact form)
+   - **Cache HTTP methods:** keep default (`GET, HEAD`; OPTIONS may remain unchecked)
    - Save
 
 ### 8c — Test the distribution
@@ -338,7 +351,110 @@ Should return the 4 projects JSON.
 
 ---
 
-## Step 9 — Backup & Rollback Setup
+## Step 9 — Custom Domain with IONOS + ACM + CloudFront
+
+Custom domain completed June 24/25, 2026.
+
+### 9a — Request SSL certificate in ACM
+
+CloudFront only sees ACM certificates created in **US East (N. Virginia) /
+`us-east-1`**.
+
+1. AWS Console → switch region to `us-east-1`
+2. Certificate Manager → Request certificate → Public certificate
+3. Add both names:
+   ```text
+   vinodmaneti.com
+   www.vinodmaneti.com
+   ```
+4. Choose DNS validation.
+5. Certificate issued:
+   ```text
+   arn:aws:acm:us-east-1:767398018879:certificate/c40ade75-49ae-4a42-9354-d663e6048cde
+   ```
+
+### 9b — Add ACM validation records in IONOS
+
+IONOS DNS records used:
+
+```text
+Type: CNAME
+Host name: _dfb2c5bf8d605a79c6cbb06a672108cd
+Value: _c21f27b854f5511bd8ca0bd9589215f4.jkddzztszm.acm-validations.aws
+Service: -
+```
+
+```text
+Type: CNAME
+Host name: _a64e269b9c994ff1543cd0c57cc19b72.www
+Value: _b8fb2c1e21567aede34c78dbff77bc26.jkddzztszm.acm-validations.aws
+Service: -
+```
+
+Important: the second record must use the second value. It was initially copied
+with the first value by mistake, so `vinodmaneti.com` validated but
+`www.vinodmaneti.com` stayed pending. Confirm with:
+
+```bash
+dig CNAME _a64e269b9c994ff1543cd0c57cc19b72.www.vinodmaneti.com
+```
+
+Expected answer:
+```text
+_b8fb2c1e21567aede34c78dbff77bc26.jkddzztszm.acm-validations.aws.
+```
+
+### 9c — Attach domain names to CloudFront
+
+CloudFront → distribution `E2EZ2L1KSZ1EQ8` → add alternate domain names:
+
+```text
+vinodmaneti.com
+www.vinodmaneti.com
+```
+
+Select the ACM certificate above. Wait for CloudFront deployment to complete.
+
+### 9d — Point IONOS DNS to CloudFront
+
+Add this IONOS DNS record:
+
+```text
+Type: CNAME
+Host name: www
+Value: d3v7l3ap9v1bme.cloudfront.net
+Service: -
+```
+
+IONOS does not allow a root/apex CNAME for `@`, so the root domain is configured
+as an HTTP redirect:
+
+```text
+vinodmaneti.com → https://www.vinodmaneti.com
+Redirect type: HTTP redirect
+```
+
+Do not enable "Also set up for www subdomain"; `www` is already handled by the
+CloudFront CNAME.
+
+### 9e — IONOS SSL for root redirect
+
+`https://vinodmaneti.com` initially showed:
+
+```text
+ERR_SSL_PROTOCOL_ERROR
+```
+
+Cause: IONOS forwarding existed, but IONOS SSL had not been activated for the
+root redirect service.
+
+Fix: activate the included `SSL Starter Wildcard` for `vinodmaneti.com`. After
+installation, `https://vinodmaneti.com` redirects securely to
+`https://www.vinodmaneti.com`.
+
+---
+
+## Step 10 — Backup & Rollback Setup
 
 Three layers of rollback:
 
@@ -431,7 +547,106 @@ but requested an insecure resource 'http://3.138.107.152:8080/api/projects'.
 
 ### "Connection is not secure" in browser (before CloudFront)
 **Cause:** The S3 website URL (`http://`) serves HTTP — no SSL/TLS.
-**Fix:** Set up CloudFront (Steps 8a–8c above). Access the site exclusively via the `https://d3v7l3ap9v1bme.cloudfront.net` URL.
+**Fix:** Set up CloudFront (Steps 8a–8c above). After the custom domain setup,
+access the site through `https://www.vinodmaneti.com`; the CloudFront URL remains
+as a fallback.
+
+---
+
+### Custom domain CORS error after switching to `www.vinodmaneti.com`
+```
+Access to XMLHttpRequest at 'https://d3v7l3ap9v1bme.cloudfront.net/api/projects'
+from origin 'https://www.vinodmaneti.com' has been blocked by CORS policy
+```
+**Cause:** Angular was still compiled with the hardcoded CloudFront API URL.
+The frontend page was on `www.vinodmaneti.com`, but API calls went to the old
+CloudFront domain.
+
+**Fix:** Change `portfolio-site/src/app/services/api.service.ts`:
+```typescript
+private readonly baseUrl = '/api';
+```
+Then rebuild, upload the build output to S3, and create CloudFront invalidation
+for `/*`.
+
+---
+
+### Angular build failed with `Cannot find module './bootstrap'`
+```
+Error: Cannot find module './bootstrap'
+Require stack:
+- .../portfolio-site/node_modules/.bin/ng
+```
+**Cause:** Local `node_modules` was damaged/incomplete. `npm install` alone
+reported "up to date" and did not repair it.
+
+**Fix:**
+```bash
+cd /Users/vinod/Projects/portfolio-app/portfolio-site
+rm -rf node_modules
+npm ci
+npm run build
+```
+
+---
+
+### AWS CLI missing locally
+```
+zsh: command not found: aws
+```
+**Cause:** AWS CLI was not installed on the Mac.
+
+**Fix used:** manually upload the contents of
+`portfolio-site/dist/portfolio-site/browser/` to the S3 bucket
+`vinod-portfolio-2026`, then create a CloudFront invalidation for `/*` in the
+AWS console.
+
+---
+
+### Contact form returned `403 Forbidden`
+```
+POST https://www.vinodmaneti.com/api/contact 403 Forbidden
+```
+**Causes checked/fixed:**
+1. CloudFront `/api/*` behavior must allow all HTTP methods, including `POST`.
+2. Spring Boot CORS originally allowed only localhost and the CloudFront domain.
+
+**Fix:** update `WebConfig.java` to include:
+```java
+"https://www.vinodmaneti.com",
+"https://vinodmaneti.com"
+```
+Then rebuild and redeploy the backend JAR to EC2.
+
+Verification result from the site:
+```text
+Thanks for reaching out. I'll get back to you soon.
+```
+
+---
+
+### SCP/SSH timed out to EC2
+```
+ssh: connect to host 3.150.38.140 port 22: Operation timed out
+```
+**Cause:** EC2 security group allowed SSH only from an old home IP:
+`70.120.128.206/32`.
+
+**Fix:** EC2 → `portfolio-ec2-sg` → inbound rules → update SSH port `22`
+source to **My IP**, then retry `scp`/`ssh`.
+
+---
+
+### Tomcat `Invalid character found in method name`
+```
+Invalid character found in method name [MGLNDD_3.150.38.140_8080...]
+```
+**Cause:** random internet scanner/bot traffic hit the public EC2 `8080` port
+with non-HTTP data.
+
+**Fix:** no app fix required for that log entry. Longer-term security
+improvement: restrict EC2 `8080` so only CloudFront can reach it, or place the
+backend behind a load balancer/API Gateway.
 
 ---
 
@@ -453,13 +668,14 @@ ssh -i ~/.ssh/portfolio-key.pem ec2-user@3.150.38.140
 pkill -f portfolio-1.0.0.jar
 sleep 3
 nohup java -jar portfolio-1.0.0.jar --spring.config.location=application.properties > app.log 2>&1 &
+tail -80 app.log
 ```
 
 **Frontend changes:**
 ```bash
 # Mac — build and upload
 cd /Users/vinod/Projects/portfolio-app/portfolio-site
-ng build --configuration production
+npm run build
 # Then re-upload all contents of dist/portfolio-site/browser/ to S3 bucket
 
 # Invalidate CloudFront cache (REQUIRED — otherwise visitors see the old build)
@@ -472,11 +688,14 @@ ng build --configuration production
 
 - [x] Set up Elastic IP (3.150.38.140) — EC2 IP no longer changes
 - [x] Add HTTPS via CloudFront (d3v7l3ap9v1bme.cloudfront.net)
+- [x] Register and connect custom domain (`www.vinodmaneti.com`)
+- [x] Configure root redirect (`vinodmaneti.com` → `www.vinodmaneti.com`)
+- [x] Fix custom-domain API/CORS issue with relative `/api` and backend CORS
 - [x] Enable S3 versioning for frontend rollback
 - [x] Create EC2 backup JAR for backend rollback
 - [ ] Set Spring Boot to auto-start on EC2 reboot (systemd service)
 - [ ] Protect `GET /api/contact` with authentication
-- [ ] Custom domain — pending GitHub Student Developer Pack (applied June 20, 2026)
+- [ ] Restrict public EC2 `8080` exposure
 - [ ] Set up GitHub Actions CI/CD for automated deploys (concerns: SSH port 22 from GH runners, IAM credentials, application.properties handling)
 - [ ] Record video demo for final course submission (deadline August 2, 2026)
 
