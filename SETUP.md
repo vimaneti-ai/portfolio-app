@@ -227,6 +227,44 @@ Cards had `class="proj-card reveal"` — the `reveal` class starts at `opacity: 
 
 ---
 
+### Angular local API calls returned 404
+Console errors:
+```text
+POST http://localhost:4200/api/analytics/track 404 (Not Found)
+POST http://localhost:4200/api/contact 404 (Not Found)
+```
+
+**Cause:** `ng serve` runs Angular on port 4200. A relative `/api` URL points to
+Angular's dev server unless a proxy is configured.
+
+**Fix:** during local development, `api.service.ts` routes localhost traffic to
+Spring Boot on port 8080:
+```typescript
+private readonly baseUrl =
+  ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:8080/api'
+    : '/api';
+```
+
+Production still uses `/api`, which CloudFront routes to EC2.
+
+---
+
+### Stopping local backend/frontend when Control+C did not work
+
+Control+C only works in the focused terminal that owns the running process. If
+the terminal was not focused or the process was running elsewhere, stop by port:
+
+```bash
+lsof -iTCP:8080 -sTCP:LISTEN -n -P
+lsof -iTCP:4200 -sTCP:LISTEN -n -P
+kill <PID>
+```
+
+Use `kill -9 <PID>` only if normal `kill` does not stop it.
+
+---
+
 ### portfolio-site added as git submodule
 Copying `portfolio-site` into `portfolio-app` while it still had its own `.git` folder caused git to treat it as a submodule — only a reference was committed, not the files.
 
@@ -328,6 +366,7 @@ Important production notes:
 - [x] Configure root redirect (`vinodmaneti.com` → `www.vinodmaneti.com`)
 - [x] Update `WebConfig.java` allowed origins with CloudFront + custom domain URLs
 - [x] Update `baseUrl` in `api.service.ts` to relative `/api`
+- [x] Add visitor analytics endpoint, DB table, and frontend tracking
 - [x] Add resume PDF — `portfolio-site/src/assets/Vinod_Resume.pdf`
 - [x] Enable S3 versioning for rollback
 - [ ] Protect `GET /api/contact` with authentication

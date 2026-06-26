@@ -192,6 +192,10 @@ Analytics records are intentionally lightweight. The frontend sends only session
 
 See [PRIVACY.md](PRIVACY.md) for the portfolio analytics privacy note.
 
+Production RDS has the `visitor_events` table. Long-term database access should
+go through EC2 (`Mac → SSH to EC2 → RDS`) instead of direct Mac → RDS access,
+because home/public IP allowlist rules change over time.
+
 ---
 
 ## Deployment

@@ -121,13 +121,23 @@ Verify:
 
 Expected: `contact_messages`, `projects`, `visitor_events` tables and 4 project rows.
 
-If the database already exists and only the analytics table is missing, run:
+If the database already exists and only the analytics table is missing, run the
+schema change from EC2. This is the stable path because RDS allows the EC2
+security group permanently, while a home/public IP changes over time.
 
 ```bash
-/usr/local/mysql/bin/mysql \
+ssh -i ~/.ssh/portfolio-key.pem ec2-user@3.150.38.140
+
+mysql \
   -h portfolio-db.cduecko8i86c.us-east-2.rds.amazonaws.com \
   -u admin -p \
   -e "USE portfolio_db; CREATE TABLE IF NOT EXISTS visitor_events (id BIGINT AUTO_INCREMENT PRIMARY KEY, session_id VARCHAR(100), event_type VARCHAR(50) NOT NULL, event_name VARCHAR(150), page_url VARCHAR(500), referrer VARCHAR(500), user_agent VARCHAR(1000), browser VARCHAR(100), operating_system VARCHAR(100), device_type VARCHAR(50), ip_hash VARCHAR(128), ip_truncated VARCHAR(100), country VARCHAR(100), region VARCHAR(100), city VARCHAR(100), timezone VARCHAR(100), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);"
+```
+
+If `mysql` is not installed on EC2:
+
+```bash
+sudo dnf install mariadb105 -y
 ```
 
 ---
@@ -675,6 +685,102 @@ source to **My IP**, then retry `scp`/`ssh`.
 
 ---
 
+### RDS MySQL timed out from local Mac
+```
+ERROR 2003 (HY000): Can't connect to MySQL server on
+'portfolio-db.cduecko8i86c.us-east-2.rds.amazonaws.com:3306' (60)
+```
+
+**Cause:** RDS security group had an old home/public IP rule:
+```text
+70.120.128.206/32
+```
+The current Mac public IP had changed, so direct MySQL access from the Mac timed
+out.
+
+**Permanent fix:** do not depend on direct Mac → RDS access. Keep the RDS inbound
+rule that allows the EC2 security group:
+```text
+portfolio-rds-sg inbound MySQL/Aurora 3306 from portfolio-ec2-sg
+```
+Then run database commands from EC2:
+```bash
+ssh -i ~/.ssh/portfolio-key.pem ec2-user@3.150.38.140
+
+mysql \
+  -h portfolio-db.cduecko8i86c.us-east-2.rds.amazonaws.com \
+  -u admin -p \
+  -e "USE portfolio_db; SHOW TABLES;"
+```
+
+This was verified after creating the analytics table:
+```text
+contact_messages
+projects
+visitor_events
+```
+
+---
+
+### RDS recommendations: Enhanced Monitoring and Multi-AZ
+
+AWS showed two informational recommendations:
+```text
+portfolio-db doesn't have Enhanced Monitoring enabled
+portfolio-db is not a Multi-AZ instance
+```
+
+**Decision:** ignore/dismiss for now. For a personal portfolio, basic CloudWatch
+metrics and a single-AZ free-tier style RDS setup are acceptable. Multi-AZ and
+Enhanced Monitoring improve reliability/observability but can add cost and are
+not required for this deployment.
+
+---
+
+### Local Angular called port 4200 API and returned 404
+```
+POST http://localhost:4200/api/analytics/track 404 (Not Found)
+POST http://localhost:4200/api/contact 404 (Not Found)
+```
+
+**Cause:** during `ng serve`, relative `/api` points at Angular's dev server on
+port 4200, not Spring Boot on port 8080.
+
+**Fix:** `portfolio-site/src/app/services/api.service.ts` now uses localhost
+detection:
+```typescript
+private readonly baseUrl =
+  ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:8080/api'
+    : '/api';
+```
+
+Production still uses `/api`, which CloudFront routes to EC2.
+
+---
+
+### Local dev servers did not stop with Control+C
+
+**Cause:** Control+C only stops the process attached to the focused terminal.
+If the server was launched in another tab/background process, it may keep
+running.
+
+**Fix:** find and stop the process by port:
+```bash
+lsof -iTCP:8080 -sTCP:LISTEN -n -P
+lsof -iTCP:4200 -sTCP:LISTEN -n -P
+
+kill <BACKEND_PID>
+kill <FRONTEND_PID>
+```
+
+Force only if needed:
+```bash
+kill -9 <PID>
+```
+
+---
+
 ### Tomcat `Invalid character found in method name`
 ```
 Invalid character found in method name [MGLNDD_3.150.38.140_8080...]
@@ -694,7 +800,9 @@ When you make code changes and need to redeploy:
 
 **Database/schema changes:**
 ```bash
-/usr/local/mysql/bin/mysql \
+ssh -i ~/.ssh/portfolio-key.pem ec2-user@3.150.38.140
+
+mysql \
   -h portfolio-db.cduecko8i86c.us-east-2.rds.amazonaws.com \
   -u admin -p \
   -e "USE portfolio_db; CREATE TABLE IF NOT EXISTS visitor_events (id BIGINT AUTO_INCREMENT PRIMARY KEY, session_id VARCHAR(100), event_type VARCHAR(50) NOT NULL, event_name VARCHAR(150), page_url VARCHAR(500), referrer VARCHAR(500), user_agent VARCHAR(1000), browser VARCHAR(100), operating_system VARCHAR(100), device_type VARCHAR(50), ip_hash VARCHAR(128), ip_truncated VARCHAR(100), country VARCHAR(100), region VARCHAR(100), city VARCHAR(100), timezone VARCHAR(100), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);"
@@ -743,6 +851,8 @@ npm run build
 - [x] Fix custom-domain API/CORS issue with relative `/api` and backend CORS
 - [x] Enable S3 versioning for frontend rollback
 - [x] Create EC2 backup JAR for backend rollback
+- [x] Add `visitor_events` analytics table to production RDS
+- [x] Add visitor analytics tracking endpoint and frontend page/click tracking
 - [ ] Set Spring Boot to auto-start on EC2 reboot (systemd service)
 - [ ] Protect `GET /api/contact` with authentication
 - [ ] Restrict public EC2 `8080` exposure
