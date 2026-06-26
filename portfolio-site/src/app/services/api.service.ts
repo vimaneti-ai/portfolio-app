@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Project, ContactRequest, ContactResponse } from '../models/models';
+import { Project, ContactRequest, ContactResponse, VisitorEventRequest } from '../models/models';
 
 /**
  * Single service that talks to the Spring Boot backend.
@@ -10,11 +10,16 @@ import { Project, ContactRequest, ContactResponse } from '../models/models';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
 
-  // Use a relative API path so the app works on both the CloudFront URL
-  // and the custom domain without cross-origin/CORS issues.
-  private readonly baseUrl = '/api';
+  private readonly baseUrl =
+    ['localhost', '127.0.0.1'].includes(window.location.hostname)
+      ? 'http://localhost:8080/api'
+      : '/api';
 
   constructor(private http: HttpClient) {}
+
+  trackVisitorEvent(payload: VisitorEventRequest): Observable<{ status: string }> {
+    return this.http.post<{ status: string }>(`${this.baseUrl}/analytics/track`, payload);
+  }
 
   // ----- Projects -----
   getProjects(category: string = 'all'): Observable<Project[]> {

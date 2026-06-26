@@ -12,11 +12,12 @@ GitHub: **https://github.com/vimaneti-ai/portfolio-app**
 
 ## What this app does
 
-Three features make this a real full-stack app instead of a static page:
+Four features make this a real full-stack app instead of a static page:
 
 1. **Projects from a database** — the Projects section loads dynamically from `GET /api/projects`
 2. **Contact form** — Angular reactive form → Spring Boot REST API → MySQL
 3. **Email notifications** — every contact submission triggers a Gmail notification to the site owner and a confirmation reply to the sender (JavaMailSender + Gmail SMTP, async)
+4. **Visitor analytics** — page views and key interactions are sent to `POST /api/analytics/track` and stored in MySQL with session ID, referrer, browser/device details, hashed/truncated IP, and optional approximate GeoIP fields
 
 ---
 
@@ -33,7 +34,7 @@ Three features make this a real full-stack app instead of a static page:
   Spring Boot API   ──  Controller → Service → Repository
       |   JPA / Hibernate
       v
-  MySQL database    (contact_messages, projects)
+  MySQL database    (contact_messages, projects, visitor_events)
 ```
 
 ### Production (AWS)
@@ -59,10 +60,10 @@ portfolio-app/
     config/
       application.properties          Local secrets (gitignored, never packaged)
     src/main/java/com/vinod/portfolio/
-      controller/           REST endpoints (contact, projects, error handling)
+      controller/           REST endpoints (contact, projects, analytics, error handling)
       service/              business logic
       repository/           Spring Data JPA interfaces
-      model/                JPA entities (ContactMessage, Project)
+      model/                JPA entities (ContactMessage, Project, VisitorEvent)
       config/               CORS configuration (WebConfig.java)
     src/main/resources/
       application.properties.example  Template — copy and fill in credentials
@@ -85,7 +86,7 @@ portfolio-app/
       assets/               Put resume PDF here (vinod-maneti-resume.pdf)
 
   portfolio-db/
-    schema.sql              Creates portfolio_db, both tables, seeds projects
+    schema.sql              Creates portfolio_db, analytics/contact/project tables, seeds projects
 ```
 
 ---
@@ -185,6 +186,11 @@ on the custom domain and the CloudFront domain without browser CORS errors.
 | GET  | `/api/projects?category=backend` | Filter by category |
 | POST | `/api/contact` | Submit a contact message |
 | GET  | `/api/contact` | List messages (**protect before going public**) |
+| POST | `/api/analytics/track` | Store a page view or click event |
+
+Analytics records are intentionally lightweight. The frontend sends only session/event/page/referrer data. The backend adds request timestamp, user agent, browser, OS, device type, hashed/truncated IP, and optional approximate location fields. No browser GPS permission popup is used.
+
+See [PRIVACY.md](PRIVACY.md) for the portfolio analytics privacy note.
 
 ---
 

@@ -1,7 +1,7 @@
 -- ============================================================
 -- Portfolio Database Schema
 -- Database: MySQL
--- Two features: contact messages + projects served from DB
+-- Three features: contact messages + projects served from DB + visitor analytics
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS portfolio_db;
@@ -35,6 +35,33 @@ CREATE TABLE IF NOT EXISTS projects (
     tags         VARCHAR(300),             -- comma-separated, e.g. "Angular,TypeScript,SQL"
     display_order INT          NOT NULL DEFAULT 0,
     created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ------------------------------------------------------------
+-- Table 3: visitor_events
+-- Stores privacy-conscious portfolio analytics.
+-- The site records page/click events, browser/device data, referrer,
+-- a hashed/truncated IP, and optional approximate GeoIP fields.
+-- It does not require browser GPS permission.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS visitor_events (
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
+    session_id        VARCHAR(100),
+    event_type        VARCHAR(50)   NOT NULL,
+    event_name        VARCHAR(150),
+    page_url          VARCHAR(500),
+    referrer          VARCHAR(500),
+    user_agent        VARCHAR(1000),
+    browser           VARCHAR(100),
+    operating_system  VARCHAR(100),
+    device_type       VARCHAR(50),
+    ip_hash           VARCHAR(128),
+    ip_truncated      VARCHAR(100),
+    country           VARCHAR(100),
+    region            VARCHAR(100),
+    city              VARCHAR(100),
+    timezone          VARCHAR(100),
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ------------------------------------------------------------

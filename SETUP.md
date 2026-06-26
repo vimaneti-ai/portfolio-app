@@ -64,7 +64,7 @@ Verify:
 /usr/local/mysql/bin/mysql -u root -p'YOUR_PASSWORD' -e "USE portfolio_db; SHOW TABLES;"
 ```
 
-Expected: `contact_messages` and `projects` tables.
+Expected: `contact_messages`, `projects`, and `visitor_events` tables.
 
 ---
 
@@ -80,6 +80,21 @@ Wait for `Started PortfolioApplication`. Verify:
 ```bash
 curl http://localhost:8080/api/projects
 ```
+
+Verify analytics insert:
+```bash
+curl -X POST http://localhost:8080/api/analytics/track \
+  -H "Content-Type: application/json" \
+  -d '{"sessionId":"local-test","eventType":"page_view","eventName":"setup_test","pageUrl":"/","referrer":"manual"}'
+```
+
+Then check MySQL:
+```bash
+/usr/local/mysql/bin/mysql -u root -p'YOUR_PASSWORD' \
+  -e "USE portfolio_db; SELECT id, session_id, event_type, event_name, ip_truncated, created_at FROM visitor_events ORDER BY id DESC LIMIT 5;"
+```
+
+Localhost visits usually show `0:0:0:0:0:0:0:1` or `127.0.0.1` and do not produce real city/state/country values. Approximate location only works from a public IP after deployment and after a GeoIP lookup is added/enabled.
 
 ---
 
@@ -107,6 +122,10 @@ That relative path is intentional. It lets the same Angular build call:
 
 Do not change it back to the old hardcoded CloudFront API URL unless you also
 change the deployment/CORS design.
+
+For local development, `api.service.ts` may special-case `localhost` to call
+`http://localhost:8080/api` so `ng serve` on port 4200 reaches the Spring Boot
+backend instead of returning `404` from Angular's dev server.
 
 ---
 

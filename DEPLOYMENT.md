@@ -119,7 +119,16 @@ Verify:
   -e "USE portfolio_db; SHOW TABLES; SELECT COUNT(*) FROM projects;"
 ```
 
-Expected: `contact_messages`, `projects` tables and 4 project rows.
+Expected: `contact_messages`, `projects`, `visitor_events` tables and 4 project rows.
+
+If the database already exists and only the analytics table is missing, run:
+
+```bash
+/usr/local/mysql/bin/mysql \
+  -h portfolio-db.cduecko8i86c.us-east-2.rds.amazonaws.com \
+  -u admin -p \
+  -e "USE portfolio_db; CREATE TABLE IF NOT EXISTS visitor_events (id BIGINT AUTO_INCREMENT PRIMARY KEY, session_id VARCHAR(100), event_type VARCHAR(50) NOT NULL, event_name VARCHAR(150), page_url VARCHAR(500), referrer VARCHAR(500), user_agent VARCHAR(1000), browser VARCHAR(100), operating_system VARCHAR(100), device_type VARCHAR(50), ip_hash VARCHAR(128), ip_truncated VARCHAR(100), country VARCHAR(100), region VARCHAR(100), city VARCHAR(100), timezone VARCHAR(100), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);"
+```
 
 ---
 
@@ -196,6 +205,14 @@ nohup java -jar portfolio-1.0.0.jar \
 sleep 15 && curl http://localhost:8080/api/projects
 ```
 
+Test analytics from EC2:
+
+```bash
+curl -X POST http://localhost:8080/api/analytics/track \
+  -H "Content-Type: application/json" \
+  -d '{"sessionId":"ec2-test","eventType":"page_view","eventName":"backend_deploy_test","pageUrl":"/","referrer":"manual"}'
+```
+
 ### Restart the app after a JAR update
 
 ```bash
@@ -232,7 +249,7 @@ Rebuild and redeploy the JAR after this change (repeat Steps 5a, 5c, 5d restart)
 
 ### 6b — Update API URL in api.service.ts
 
-In `portfolio-site/src/app/services/api.service.ts`:
+In `portfolio-site/src/app/services/api.service.ts`, production traffic must resolve to:
 ```typescript
 private readonly baseUrl = '/api';
 ```
@@ -240,6 +257,10 @@ private readonly baseUrl = '/api';
 Using `/api` makes the browser call the same domain currently serving the
 Angular app, for example `https://www.vinodmaneti.com/api/projects`. This avoids
 cross-origin/CORS problems when using the custom domain.
+
+Local development can special-case `localhost` to call
+`http://localhost:8080/api`, but the deployed build must still use `/api` for
+the live domain.
 
 ### 6c — Build Angular
 
@@ -337,7 +358,7 @@ CloudFront gives HTTPS to the whole site. The browser calls CloudFront; CloudFro
    - Origin: select the EC2 origin
    - Cache policy: **CachingDisabled** (API responses must never be cached)
    - **Allowed HTTP methods:** `GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE`
-     (POST is needed for the contact form)
+     (POST is needed for the contact form and analytics tracking)
    - **Cache HTTP methods:** keep default (`GET, HEAD`; OPTIONS may remain unchecked)
    - Save
 
@@ -348,6 +369,23 @@ curl https://d3v7l3ap9v1bme.cloudfront.net/api/projects
 ```
 
 Should return the 4 projects JSON.
+
+Test analytics through CloudFront:
+
+```bash
+curl -X POST https://d3v7l3ap9v1bme.cloudfront.net/api/analytics/track \
+  -H "Content-Type: application/json" \
+  -d '{"sessionId":"cloudfront-test","eventType":"page_view","eventName":"cloudfront_test","pageUrl":"/","referrer":"manual"}'
+```
+
+Verify in RDS:
+
+```bash
+/usr/local/mysql/bin/mysql \
+  -h portfolio-db.cduecko8i86c.us-east-2.rds.amazonaws.com \
+  -u admin -p \
+  -e "USE portfolio_db; SELECT id, session_id, event_type, event_name, page_url, browser, operating_system, device_type, ip_truncated, country, region, city, created_at FROM visitor_events ORDER BY id DESC LIMIT 10;"
+```
 
 ---
 
@@ -653,6 +691,18 @@ backend behind a load balancer/API Gateway.
 ## Redeployment Checklist
 
 When you make code changes and need to redeploy:
+
+**Database/schema changes:**
+```bash
+/usr/local/mysql/bin/mysql \
+  -h portfolio-db.cduecko8i86c.us-east-2.rds.amazonaws.com \
+  -u admin -p \
+  -e "USE portfolio_db; CREATE TABLE IF NOT EXISTS visitor_events (id BIGINT AUTO_INCREMENT PRIMARY KEY, session_id VARCHAR(100), event_type VARCHAR(50) NOT NULL, event_name VARCHAR(150), page_url VARCHAR(500), referrer VARCHAR(500), user_agent VARCHAR(1000), browser VARCHAR(100), operating_system VARCHAR(100), device_type VARCHAR(50), ip_hash VARCHAR(128), ip_truncated VARCHAR(100), country VARCHAR(100), region VARCHAR(100), city VARCHAR(100), timezone VARCHAR(100), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);"
+```
+
+Use the full `portfolio-db/schema.sql` file only for a fresh database. It also
+contains project seed inserts, so rerunning the whole file on an existing RDS
+database can duplicate project rows.
 
 **Backend changes:**
 ```bash

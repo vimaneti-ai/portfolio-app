@@ -1,4 +1,5 @@
 import { Component, HostListener, AfterViewInit } from '@angular/core';
+import { ApiService } from './services/api.service';
 
 @Component({
   selector: 'app-root',
@@ -15,10 +16,13 @@ export class AppComponent implements AfterViewInit {
     this.navScrolled = window.scrollY > 20;
   }
 
+  constructor(private api: ApiService) {}
+
   toggleMenu() { this.menuOpen = !this.menuOpen; }
   closeMenu()  { this.menuOpen = false; }
 
   ngOnInit() {
+    this.trackEvent('page_view', 'site_loaded');
     const targets = { years: 6, companies: 2, projects: 4 };
     const duration = 1800;
     const start = performance.now();
@@ -38,5 +42,25 @@ export class AppComponent implements AfterViewInit {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
     }, { threshold: 0.12 });
     document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  }
+
+  private getSessionId(): string {
+    const key = 'visitorSessionId';
+    let sessionId = localStorage.getItem(key);
+    if (!sessionId) {
+      sessionId = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      localStorage.setItem(key, sessionId);
+    }
+    return sessionId;
+  }
+
+  trackEvent(eventType: string, eventName: string) {
+    this.api.trackVisitorEvent({
+      sessionId: this.getSessionId(),
+      eventType,
+      eventName,
+      pageUrl: window.location.pathname,
+      referrer: document.referrer
+    }).subscribe({ error: () => {} });
   }
 }

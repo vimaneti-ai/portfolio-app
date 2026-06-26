@@ -22,3 +22,10 @@ export interface ContactResponse {
   status: string;
   message: string;
 }
+export interface VisitorEventRequest {
+  sessionId: string;
+  eventType: string;
+  eventName?: string;
+  pageUrl: string;
+  referrer?: string;
+}
