@@ -673,6 +673,47 @@ Thanks for reaching out. I'll get back to you soon.
 
 ---
 
+### Protected contact-message admin endpoint
+
+`GET /api/contact` is protected with Spring Security HTTP Basic Auth.
+
+Public endpoint remains open:
+```bash
+curl https://www.vinodmaneti.com/api/projects
+```
+
+Contact form submissions remain open:
+```bash
+curl -X POST https://www.vinodmaneti.com/api/contact \
+  -H "Content-Type: application/json" \
+  -d '{"firstName":"Test","lastName":"User","email":"test@example.com","message":"Hello"}'
+```
+
+Reading all contact messages requires admin credentials:
+```bash
+curl -u admin:YOUR_ADMIN_PASSWORD https://www.vinodmaneti.com/api/contact
+```
+
+Without credentials:
+```bash
+curl https://www.vinodmaneti.com/api/contact
+# Expected: 401 Unauthorized
+```
+
+Important CloudFront note: if Basic Auth works directly against EC2 but fails
+through `www.vinodmaneti.com`, confirm the `/api/*` behavior forwards the
+`Authorization` header to the EC2 origin.
+
+The admin credentials live only in external config:
+```text
+portfolio-backend/config/application.properties
+EC2: ~/application.properties
+```
+
+Do not commit real admin credentials.
+
+---
+
 ### SCP/SSH timed out to EC2
 ```
 ssh: connect to host 3.150.38.140 port 22: Operation timed out
@@ -854,7 +895,7 @@ npm run build
 - [x] Add `visitor_events` analytics table to production RDS
 - [x] Add visitor analytics tracking endpoint and frontend page/click tracking
 - [ ] Set Spring Boot to auto-start on EC2 reboot (systemd service)
-- [ ] Protect `GET /api/contact` with authentication
+- [x] Protect `GET /api/contact` with Spring Security HTTP Basic Auth
 - [ ] Restrict public EC2 `8080` exposure
 - [ ] Set up GitHub Actions CI/CD for automated deploys (concerns: SSH port 22 from GH runners, IAM credentials, application.properties handling)
 - [ ] Record video demo for final course submission (deadline August 2, 2026)

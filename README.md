@@ -17,7 +17,7 @@ Four features make this a real full-stack app instead of a static page:
 1. **Projects from a database** — the Projects section loads dynamically from `GET /api/projects`
 2. **Contact form** — Angular reactive form → Spring Boot REST API → MySQL
 3. **Email notifications** — every contact submission triggers a Gmail notification to the site owner and a confirmation reply to the sender (JavaMailSender + Gmail SMTP, async)
-4. **Visitor analytics** — page views and key interactions are sent to `POST /api/analytics/track` and stored in MySQL with session ID, referrer, browser/device details, hashed/truncated IP, and optional approximate GeoIP fields
+4. **Visitor analytics** — page views and key interactions are sent to `POST /api/analytics/track` and stored in MySQL with session ID, referrer, browser/device details, hashed/truncated IP, and approximate GeoIP fields for public IPs
 
 ---
 
@@ -185,10 +185,12 @@ on the custom domain and the CloudFront domain without browser CORS errors.
 | GET  | `/api/projects` | All projects in display order |
 | GET  | `/api/projects?category=backend` | Filter by category |
 | POST | `/api/contact` | Submit a contact message |
-| GET  | `/api/contact` | List messages (**protect before going public**) |
+| GET  | `/api/contact` | List messages (**admin-only, HTTP Basic Auth**) |
 | POST | `/api/analytics/track` | Store a page view or click event |
 
-Analytics records are intentionally lightweight. The frontend sends only session/event/page/referrer data. The backend adds request timestamp, user agent, browser, OS, device type, hashed/truncated IP, and optional approximate location fields. No browser GPS permission popup is used.
+Analytics records are intentionally lightweight. The frontend sends only session/event/page/referrer data. The backend adds request timestamp, user agent, browser, OS, device type, hashed/truncated IP, and approximate location from server-side IP lookup. No browser GPS permission popup is used. Localhost/private IPs intentionally leave location fields blank.
+
+`GET /api/contact` is protected with Spring Security HTTP Basic Auth. Public visitors can still submit the contact form with `POST /api/contact`, but only an admin with credentials from the external `application.properties` can list stored messages.
 
 See [PRIVACY.md](PRIVACY.md) for the portfolio analytics privacy note.
 
@@ -238,6 +240,6 @@ CloudFront invalidation for `/*`.
 
 ## Remaining TODOs
 
-- Protect `GET /api/contact` with authentication
+- [x] Protect `GET /api/contact` with Spring Security HTTP Basic Auth
 - Set Spring Boot to auto-start on EC2 reboot (systemd service)
 - Review npm audit findings and update frontend dependencies safely

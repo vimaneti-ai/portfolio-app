@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS projects (
 -- Table 3: visitor_events
 -- Stores privacy-conscious portfolio analytics.
 -- The site records page/click events, browser/device data, referrer,
--- a hashed/truncated IP, and optional approximate GeoIP fields.
+-- a hashed/truncated IP, and approximate GeoIP fields for public IPs.
 -- It does not require browser GPS permission.
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS visitor_events (

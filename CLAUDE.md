@@ -33,7 +33,7 @@ Custom domain:
 - **portfolio-site** — The live Angular 17 app at `portfolio-app/portfolio-site/` (inside this repo). Uses `NgModule`-based architecture with standalone components imported directly into `AppModule`. All page layout (nav, hero, about, experience, skills) lives in `app.component.html`; projects load dynamically via `<app-projects>` and the contact form via `<app-contact>`. Global styles (dark theme, CSS variables, all component styles) are in `src/styles.css`. `api.service.ts` intentionally uses relative `baseUrl = '/api'` so the custom domain does not trigger CORS errors. **Always edit files here — not in `portfolio-frontend/`.**
 - **portfolio-frontend** — Source components only (not a runnable app). These were copied into `portfolio-site` during setup. Do not edit here.
 - **portfolio-backend** — Spring Boot 3 / Java 17 REST API. Standard layered structure: Controller → Service → Repository (Spring Data JPA). `@EnableAsync` is set on `PortfolioApplication`. CORS is configured in `WebConfig.java` — currently allows `http://localhost:4200`, the CloudFront domain, and both custom domain origins.
-- **portfolio-db** — `schema.sql` creates `portfolio_db` and its two tables, then seeds the project rows. Hibernate is set to `validate` mode, so the schema must exist before the backend starts.
+- **portfolio-db** — `schema.sql` creates `portfolio_db` and its three tables (`contact_messages`, `projects`, `visitor_events`), then seeds the project rows. Hibernate is set to `validate` mode, so the schema must exist before the backend starts.
 
 The `Project.tags` field is a comma-separated string in both the database and the TypeScript model — `tagList()` in `projects.component.ts` splits it at render time.
 
@@ -60,6 +60,19 @@ Key UI features implemented:
 - Vertical timeline for experience with glowing violet dot markers
 - Spinning gradient border on project cards (violet→teal→bronze) on hover
 - Contact form (`<app-contact>`) wired into the page — saves to MySQL and sends email
+- Visitor analytics — `page_view` fired on app init and click events on Resume/LinkedIn/GitHub links, stored in `visitor_events` table
+
+## Visitor analytics
+
+`VisitorAnalyticsService.java` handles `POST /api/analytics/track`. On each event it:
+
+1. Reads the real client IP from `X-Forwarded-For` (set by CloudFront) or falls back to `X-Real-IP` / `remoteAddr`
+2. SHA-256 hashes the IP and stores a truncated version (`a.b.c.0` for IPv4)
+3. Parses browser, OS, and device type from the User-Agent string
+4. Calls `ip-api.com` for approximate GeoIP (country, region, city, timezone) — skipped for localhost and private IP ranges (127.x, 10.x, 192.168.x, 172.16–31.x)
+5. Saves a `VisitorEvent` row
+
+The frontend (`app.component.ts`) fires `page_view` on init and `link_click` events for Resume, LinkedIn, and GitHub interactions via `ApiService.trackEvent()`. See [PRIVACY.md](PRIVACY.md) for the public-facing privacy notice.
 
 ## Email (contact form notifications)
 
@@ -143,6 +156,9 @@ curl http://localhost:8080/api/projects
 ```bash
 curl http://localhost:8080/api/projects
 curl "http://localhost:8080/api/projects?category=backend"
+curl -X POST http://localhost:8080/api/analytics/track \
+  -H "Content-Type: application/json" \
+  -d '{"sessionId":"test","eventType":"page_view","pageUrl":"/"}'
 ```
 
 ## GitHub

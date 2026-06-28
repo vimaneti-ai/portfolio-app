@@ -94,7 +94,7 @@ Then check MySQL:
   -e "USE portfolio_db; SELECT id, session_id, event_type, event_name, ip_truncated, created_at FROM visitor_events ORDER BY id DESC LIMIT 5;"
 ```
 
-Localhost visits usually show `0:0:0:0:0:0:0:1` or `127.0.0.1` and do not produce real city/state/country values. Approximate location only works from a public IP after deployment and after a GeoIP lookup is added/enabled.
+Localhost visits usually show `0:0:0:0:0:0:0:1` or `127.0.0.1` and do not produce real city/state/country values. Approximate location is populated only for public IPs.
 
 ---
 
@@ -353,6 +353,18 @@ Important production notes:
   domain origins.
 - Contact form was verified after the backend redeploy and returned:
   `Thanks for reaching out. I'll get back to you soon.`
+- `GET /api/contact` is protected with Spring Security HTTP Basic Auth. Public
+  visitors can submit the contact form, but listing stored contact messages
+  requires admin credentials from `application.properties`.
+
+Verify locally:
+```bash
+curl http://localhost:8080/api/contact
+# Expected: 401 Unauthorized
+
+curl -u admin:YOUR_ADMIN_PASSWORD http://localhost:8080/api/contact
+# Expected: JSON list of contact messages
+```
 
 ---
 
@@ -369,7 +381,7 @@ Important production notes:
 - [x] Add visitor analytics endpoint, DB table, and frontend tracking
 - [x] Add resume PDF — `portfolio-site/src/assets/Vinod_Resume.pdf`
 - [x] Enable S3 versioning for rollback
-- [ ] Protect `GET /api/contact` with authentication
+- [x] Protect `GET /api/contact` with Spring Security HTTP Basic Auth
 - [ ] Set Spring Boot to auto-start on EC2 reboot (systemd service)
 - [ ] Restrict public EC2 `8080` exposure
 - [ ] Review npm audit findings and update frontend dependencies safely

@@ -32,3 +32,5 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 
 # Email address that receives contact form submissions
 app.notification-email=YOUR_GMAIL_ADDRESS
+app.admin.username=admin
+app.admin.password=changeme

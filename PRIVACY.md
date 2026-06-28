@@ -11,7 +11,7 @@ This portfolio collects basic analytics to understand site traffic and improve t
 - Browser, operating system, and device type inferred from the user agent
 - Random session ID stored in the browser
 - Hashed and truncated IP address
-- Optional approximate location fields, such as country, region, city, and timezone, if IP-based GeoIP lookup is enabled
+- Approximate location fields, such as country, region, city, and timezone, based on server-side IP lookup for public IPs
 - Click events for important interactions, such as resume downloads or external profile links
 
 ## What Is Not Collected
@@ -26,7 +26,7 @@ This portfolio collects basic analytics to understand site traffic and improve t
 
 ## Location
 
-Location analytics, if enabled, are based on approximate IP lookup. The site does not use browser GPS APIs such as `navigator.geolocation`, so visitors should not see a location permission popup.
+Location analytics are based on approximate IP lookup. The site does not use browser GPS APIs such as `navigator.geolocation`, so visitors should not see a location permission popup. Localhost/private IPs do not produce city/state/country values.
 
 ## Contact Form
 
