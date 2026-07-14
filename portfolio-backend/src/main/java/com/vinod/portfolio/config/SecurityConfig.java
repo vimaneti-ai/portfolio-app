@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/contact").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/analytics/summary").authenticated()
                         .anyRequest().permitAll()
                 )
                 .httpBasic(basic -> {});

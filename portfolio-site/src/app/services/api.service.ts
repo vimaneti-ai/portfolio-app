@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Project, ContactRequest, ContactResponse, VisitorEventRequest } from '../models/models';
+import { Project, ContactRequest, ContactResponse, VisitorEventRequest, AnalyticsSummary } from '../models/models';
 
 /**
  * Single service that talks to the Spring Boot backend.
@@ -33,5 +33,13 @@ export class ApiService {
   // ----- Contact -----
   sendMessage(payload: ContactRequest): Observable<ContactResponse> {
     return this.http.post<ContactResponse>(`${this.baseUrl}/contact`, payload);
+  }
+
+  // ----- Admin analytics -----
+  getAnalyticsSummary(username: string, password: string): Observable<AnalyticsSummary> {
+    const token = btoa(`${username}:${password}`);
+    return this.http.get<AnalyticsSummary>(`${this.baseUrl}/analytics/summary`, {
+      headers: { Authorization: `Basic ${token}` }
+    });
   }
 }

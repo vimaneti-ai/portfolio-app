@@ -1,3 +1,5 @@
+<app-admin *ngIf="isAdmin"></app-admin>
+<ng-container *ngIf="!isAdmin">
 <nav id="nav">
   <div class="nav-pill">
     <a href="#about"      class="nav-link" [class.active]="activeSection === 'about'"      (click)="closeMenu()">About</a>
@@ -219,3 +221,4 @@
 <footer>
   © 2026 Vinod Kumar Maneti · Built with Angular + Spring Boot
 </footer>
+</ng-container>

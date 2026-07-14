@@ -7,6 +7,7 @@ import { ApiService } from './services/api.service';
   styleUrl: './app.component.css'
 })
 export class AppComponent implements AfterViewInit {
+  isAdmin = window.location.pathname === '/admin';
   stats = { years: 0, companies: 0, projects: 0 };
   activeSection = 'about';
 

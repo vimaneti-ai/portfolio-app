@@ -1,0 +1,142 @@
+<!-- Login screen -->
+<div class="login-wrap" *ngIf="!loggedIn">
+  <div class="login-card">
+    <div class="login-logo">Vinod<span>.</span> Admin</div>
+    <p class="login-sub">Visitor Analytics Dashboard</p>
+    <form (ngSubmit)="login()">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" [(ngModel)]="username" name="username" placeholder="admin" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <p class="err" *ngIf="error">{{ error }}</p>
+      <button type="submit" class="btn-login" [disabled]="loading">
+        {{ loading ? 'Signing in…' : 'Sign in' }}
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard" *ngIf="loggedIn && summary">
+
+  <div class="dash-header">
+    <div class="dash-logo">Vinod<span>.</span> Analytics</div>
+    <p class="dash-sub">All time totals · daily chart shows last 30 days</p>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stat-cards">
+    <div class="stat-card">
+      <div class="stat-val">{{ summary.totalEvents }}</div>
+      <div class="stat-lbl">Total Events</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ summary.uniqueSessions }}</div>
+      <div class="stat-lbl">Unique Sessions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ summary.pageViews }}</div>
+      <div class="stat-lbl">Page Views</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">{{ summary.countries.length }}</div>
+      <div class="stat-lbl">Countries</div>
+    </div>
+  </div>
+
+  <!-- Daily chart -->
+  <div class="section" *ngIf="summary.last30Days.length">
+    <h3>Daily visits — last 30 days</h3>
+    <div class="bar-chart">
+      <div class="bar-col" *ngFor="let d of summary.last30Days">
+        <div class="bar-fill" [style.height]="barHeight(d.count)">
+          <span class="bar-tip">{{ d.count }}</span>
+        </div>
+        <div class="bar-label">{{ d.date.slice(5) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breakdowns -->
+  <div class="breakdown-grid">
+
+    <div class="section">
+      <h3>Browsers</h3>
+      <div class="h-bar-row" *ngFor="let b of summary.browsers">
+        <span class="h-label">{{ b.name }}</span>
+        <div class="h-track">
+          <div class="h-fill" [style.width]="barWidth(b.count, summary.browsers)"></div>
+        </div>
+        <span class="h-count">{{ b.count }}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Operating Systems</h3>
+      <div class="h-bar-row" *ngFor="let o of summary.operatingSystems">
+        <span class="h-label">{{ o.name }}</span>
+        <div class="h-track">
+          <div class="h-fill" [style.width]="barWidth(o.count, summary.operatingSystems)"></div>
+        </div>
+        <span class="h-count">{{ o.count }}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Devices</h3>
+      <div class="h-bar-row" *ngFor="let d of summary.deviceTypes">
+        <span class="h-label">{{ d.name }}</span>
+        <div class="h-track">
+          <div class="h-fill" [style.width]="barWidth(d.count, summary.deviceTypes)"></div>
+        </div>
+        <span class="h-count">{{ d.count }}</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Countries</h3>
+      <div class="h-bar-row" *ngFor="let c of summary.countries">
+        <span class="h-label">{{ c.name }}</span>
+        <div class="h-track">
+          <div class="h-fill" [style.width]="barWidth(c.count, summary.countries)"></div>
+        </div>
+        <span class="h-count">{{ c.count }}</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Recent events table -->
+  <div class="section">
+    <h3>Recent events</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Event</th>
+            <th>Page</th>
+            <th>Browser</th>
+            <th>Device</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of summary.recentEvents">
+            <td class="mono">{{ e.createdAt }}</td>
+            <td><span class="badge" [class.badge-pv]="e.eventType === 'page_view'">{{ e.eventName || e.eventType }}</span></td>
+            <td class="mono">{{ e.pageUrl }}</td>
+            <td>{{ e.browser }}</td>
+            <td>{{ e.deviceType }}</td>
+            <td>{{ e.city && e.country ? e.city + ', ' + e.country : (e.country || '—') }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
