@@ -1,10 +1,8 @@
 # Portfolio Website — Full-Stack Build
 
-A personal portfolio site built with **Angular 17 + Spring Boot + MySQL**, deployed on AWS.
+A personal portfolio site built with **Angular 17 + Spring Boot + MySQL**, fully deployed on AWS with a custom domain.
 
-**Live:** https://www.vinodmaneti.com  
-Root redirect: https://vinodmaneti.com → https://www.vinodmaneti.com  
-CloudFront fallback URL: https://d3v7l3ap9v1bme.cloudfront.net
+**Live site: https://www.vinodmaneti.com**
 
 GitHub: **https://github.com/vimaneti-ai/portfolio-app**
 
@@ -79,7 +77,7 @@ portfolio-app/
     src/
       app/
         app.component.html  Full page layout — nav, hero, about, experience, skills, contact, footer
-        app.component.ts    Nav scroll, mobile menu, stats counter animation
+        app.component.ts    Active section tracking (IntersectionObserver), stats counter animation
         components/         ProjectsComponent (dynamic from API), ContactComponent
         services/           api.service.ts — all HTTP calls go through here
       styles.css            Global dark theme — all CSS variables and component styles
@@ -93,26 +91,27 @@ portfolio-app/
 
 ## Design & theme
 
-StackHawk-inspired dark theme with 8 CSS tokens in `portfolio-site/src/styles.css`:
+Clean light theme inspired by marco.fyi, with 8 CSS tokens in `portfolio-site/src/styles.css`:
 
 | Token | Value | Role |
 |-------|-------|------|
-| `--ink` | `#07070f` | Page background |
-| `--surface` | `#0e0e1c` | Cards, alternate sections |
-| `--edge` | `#1e1e34` | Borders |
-| `--hi` | `#eeeef8` | Headings, body text |
-| `--lo` | `#6868a0` | Secondary text |
-| `--violet` | `#7c3aed` | Primary accent, gradients |
-| `--teal` | `#00cfaa` | Labels, kickers |
-| `--bronze` | `#b87848` | Project kickers, metric pills |
+| `--bg` | `#ffffff` | Page background |
+| `--surface` | `#f7f7f9` | Cards, alternate sections |
+| `--edge` | `#e8e8ed` | Borders |
+| `--hi` | `#111118` | Headings, body text |
+| `--lo` | `#44445a` | Secondary text |
+| `--accent` | `#5b21b6` | Primary accent (indigo) |
+| `--teal` | `#0891b2` | Secondary accent |
+| `--bronze` | `#c2410c` | Project kickers, metric pills |
 
 UI features:
-- Hero name single line: "Vinod Kumar" in white, "Maneti" in animated violet→teal gradient
+- Centered floating pill nav — frosted glass, active link tracks current section as you scroll
+- Hero name "Vinod Kumar Maneti" on a single line in `--hi` / `--accent`
 - LinkedIn + GitHub social pill buttons with SVG icons in the hero
 - Stats counter bar — counts up on load (6+ years, 2 companies, 4 projects)
-- Glassmorphism about cards with gradient border
-- Vertical experience timeline with glowing dot markers
-- Spinning gradient border on project cards on hover
+- About cards with border + shadow on hover
+- Vertical experience timeline with dot markers precisely aligned to the line
+- Project cards lift on hover with accent border
 - Contact form with validation, DB persistence, and email notification
 
 ---
@@ -238,8 +237,7 @@ If the AWS CLI is not installed locally, upload the contents of
 `dist/portfolio-site/browser/` manually in the S3 console, then create a
 CloudFront invalidation for `/*`.
 
-## Remaining TODOs
+## Known limitations
 
-- [x] Protect `GET /api/contact` with Spring Security HTTP Basic Auth
-- Set Spring Boot to auto-start on EC2 reboot (systemd service)
-- Review npm audit findings and update frontend dependencies safely
+- Spring Boot does not auto-start on EC2 reboot — must be restarted manually after an EC2 stop/start
+- npm audit has unresolved frontend dependency warnings — not yet reviewed

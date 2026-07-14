@@ -30,7 +30,7 @@ Custom domain:
 - ACM certificate `c40ade75-49ae-4a42-9354-d663e6048cde` is in `us-east-1` and covers both root and `www`.
 - IONOS has `www` CNAME → `d3v7l3ap9v1bme.cloudfront.net`.
 
-- **portfolio-site** — The live Angular 17 app at `portfolio-app/portfolio-site/` (inside this repo). Uses `NgModule`-based architecture with standalone components imported directly into `AppModule`. All page layout (nav, hero, about, experience, skills) lives in `app.component.html`; projects load dynamically via `<app-projects>` and the contact form via `<app-contact>`. Global styles (dark theme, CSS variables, all component styles) are in `src/styles.css`. `api.service.ts` intentionally uses relative `baseUrl = '/api'` so the custom domain does not trigger CORS errors. **Always edit files here — not in `portfolio-frontend/`.**
+- **portfolio-site** — The live Angular 17 app at `portfolio-app/portfolio-site/` (inside this repo). Uses `NgModule`-based architecture with standalone components imported directly into `AppModule`. All page layout (nav, hero, about, experience, skills) lives in `app.component.html`; projects load dynamically via `<app-projects>` and the contact form via `<app-contact>`. Global styles (light theme, CSS variables, all component styles) are in `src/styles.css`. `api.service.ts` intentionally uses relative `baseUrl = '/api'` so the custom domain does not trigger CORS errors. **Always edit files here — not in `portfolio-frontend/`.**
 - **portfolio-frontend** — Source components only (not a runnable app). These were copied into `portfolio-site` during setup. Do not edit here.
 - **portfolio-backend** — Spring Boot 3 / Java 17 REST API. Standard layered structure: Controller → Service → Repository (Spring Data JPA). `@EnableAsync` is set on `PortfolioApplication`. CORS is configured in `WebConfig.java` — currently allows `http://localhost:4200`, the CloudFront domain, and both custom domain origins.
 - **portfolio-db** — `schema.sql` creates `portfolio_db` and its three tables (`contact_messages`, `projects`, `visitor_events`), then seeds the project rows. Hibernate is set to `validate` mode, so the schema must exist before the backend starts.
@@ -39,26 +39,27 @@ The `Project.tags` field is a comma-separated string in both the database and th
 
 ## Design & theme
 
-The site uses a StackHawk-inspired dark theme with 8 CSS custom properties in `styles.css`:
+The site uses a clean light theme inspired by marco.fyi, with 8 CSS custom properties in `styles.css`:
 
 ```
---ink     #07070f   page background
---surface #0e0e1c   card / section background
---edge    #1e1e34   borders, grid lines
---hi      #eeeef8   headings and body text
---lo      #6868a0   secondary / dimmed text
---violet  #7c3aed   primary accent, gradients, glows
---teal    #00cfaa   labels, kickers, secondary accent
---bronze  #b87848   project kickers, metric pills
+--bg       #ffffff   page background
+--surface  #f7f7f9   card / alternate section background
+--edge     #e8e8ed   borders
+--hi       #111118   headings and body text
+--lo       #44445a   secondary / dimmed text
+--accent   #5b21b6   primary accent (indigo)
+--teal     #0891b2   secondary accent
+--bronze   #c2410c   project kickers, metric pills
 ```
 
 Key UI features implemented:
-- Hero name single line: "Vinod Kumar" in white (`--hi`), "Maneti" in animated violet→teal gradient
+- **Centered floating pill nav** — fixed at top, frosted glass background, active link highlights as user scrolls (IntersectionObserver on each section with threshold 0.3). Links: About, Experience, Projects, Skills, Contact, Resume.
+- Hero name "Vinod Kumar Maneti" on a single line (`white-space: nowrap`, `clamp(1.8rem, 4vw, 3.6rem)`) — "Vinod Kumar " in `--hi`, "Maneti" in `--accent`
 - LinkedIn and GitHub social pill buttons (SVG icons) below the hero name
-- Stats counter bar (6+ years, 2 companies, 4 projects — counts up on load)
-- Glassmorphism about cards with gradient border on hover
-- Vertical timeline for experience with glowing violet dot markers
-- Spinning gradient border on project cards (violet→teal→bronze) on hover
+- Stats counter bar (6+ years, 2 companies, 4 projects — counts up on load with cubic ease)
+- About cards with border + shadow on hover (no glassmorphism)
+- Vertical timeline for experience — dot (16px, accent fill) precisely centered on the 2px line (`padding-left: 32px`, line at `left: 5px`, dot at `left: -34px`)
+- Project cards lift on hover with accent border
 - Contact form (`<app-contact>`) wired into the page — saves to MySQL and sends email
 - Visitor analytics — `page_view` fired on app init and click events on Resume/LinkedIn/GitHub links, stored in `visitor_events` table
 
@@ -202,8 +203,19 @@ still allow only an old home IP. Update port `22` source to **My IP**.
 
 ## Remaining TODOs
 
-- `GET /api/contact` is unprotected — add authentication before going public
-- Set Spring Boot to auto-start on EC2 reboot (systemd service) — currently must restart manually after EC2 stop/start
-- Restrict public EC2 `8080` exposure; random scanner traffic has already shown up in Tomcat logs
-- Review npm audit findings and update frontend dependencies safely
-- Resume PDF is at `portfolio-site/src/assets/Vinod_Resume.pdf` — nav Résumé button links here
+- **EC2 systemd service** — Spring Boot does not auto-start on EC2 reboot; must restart manually. Fix: create `/etc/systemd/system/portfolio.service` and run `systemctl enable portfolio`.
+- **Restrict EC2 port 8080** — currently open to `0.0.0.0/0`; scanner traffic already in Tomcat logs. Fix: remove the `8080 | 0.0.0.0/0` inbound rule from the EC2 security group.
+- **JUnit tests** — zero unit tests exist for `ContactService`, `ProjectService`, `VisitorAnalyticsService`.
+- **npm audit** — frontend has unresolved dependency warnings; run `npm audit` and `npm audit fix` (avoid `--force` without reviewing breaking changes).
+- **SEO** — `index.html` only has `<title>PortfolioSite</title>`; needs meta description and Open Graph tags.
+- **Stray files in git** — `portfolio-backend/apache-maven-3.9.9-bin.tar.gz`, `portfolio-backend/app.log`, `portfolio-site/app.log` should be removed from tracking (`git rm --cached`) and added to `.gitignore`.
+- **Resume PDF** — at `portfolio-site/src/assets/Vinod_Resume.pdf`; nav Resume link and hero social pills link here.
+
+## Security
+
+`GET /api/contact` is protected with HTTP Basic Auth via Spring Security (`SecurityConfig.java`).
+Credentials are set via `app.admin.username` and `app.admin.password` in the external
+`portfolio-backend/config/application.properties` (never committed). Access it with:
+```bash
+curl -u admin:YOUR_PASSWORD https://www.vinodmaneti.com/api/contact
+```

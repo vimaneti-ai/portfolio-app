@@ -1,22 +1,18 @@
-<nav id="nav" [class.scrolled]="navScrolled">
-  <div class="nav-inner">
-    <a href="#top" class="logo">VINOD<span>.dev</span></a>
-    <div class="nav-links" [class.open]="menuOpen">
-      <a href="#about" (click)="closeMenu()">About</a>
-      <a href="#experience" (click)="closeMenu()">Experience</a>
-      <a href="#projects" (click)="closeMenu(); trackEvent('click', 'nav_projects')">Projects</a>
-      <a href="#skills" (click)="closeMenu()">Skills</a>
-      <a href="#contact" (click)="closeMenu(); trackEvent('click', 'nav_contact')">Contact</a>
-      <a href="assets/Vinod_Resume.pdf" target="_blank" class="nav-resume" (click)="closeMenu(); trackEvent('click', 'resume_download')">RESUME</a>
-    </div>
-    <button class="menu-btn" (click)="toggleMenu()">☰</button>
+<nav id="nav">
+  <div class="nav-pill">
+    <a href="#about"      class="nav-link" [class.active]="activeSection === 'about'"      (click)="closeMenu()">About</a>
+    <a href="#experience" class="nav-link" [class.active]="activeSection === 'experience'" (click)="closeMenu()">Experience</a>
+    <a href="#projects"   class="nav-link" [class.active]="activeSection === 'projects'"   (click)="closeMenu(); trackEvent('click', 'nav_projects')">Projects</a>
+    <a href="#skills"     class="nav-link" [class.active]="activeSection === 'skills'"     (click)="closeMenu()">Skills</a>
+    <a href="#contact"    class="nav-link" [class.active]="activeSection === 'contact'"    (click)="closeMenu(); trackEvent('click', 'nav_contact')">Contact</a>
+    <a href="assets/Vinod_Resume.pdf" target="_blank" class="nav-link nav-resume" (click)="trackEvent('click', 'resume_download')">Resume</a>
   </div>
 </nav>
 
 <header id="top">
   <div class="hero-grid"></div>
   <div class="wrap hero-content">
-    <div class="eyebrow">// Hi, I'm</div>
+    <div class="eyebrow"> Hi, I'm</div>
     <h1><span class="name-first">Vinod Kumar </span><span class="name-last">Maneti</span></h1>
 
     <div class="hero-social">
@@ -59,7 +55,7 @@
     <div class="hero-meta">
       <span>📍 Austin, TX</span>
       <span class="dot">·</span>
-      <span>MBA in progress</span>
+      <span>M.S. IT &amp; Mgmt — Cumberland University</span>
       <span class="dot">·</span>
       <span>Open to SWE roles</span>
     </div>
@@ -89,9 +85,11 @@
           system behaves correctly when real users do unexpected things.
         </p>
         <p>
-          I'm currently pursuing an <strong>MBA</strong> alongside my engineering work, with a long-term goal of growing
-          into an engineering management role. I care about writing software that is dependable and about
-          helping the people around me do their best work.
+          I hold an <strong>M.S. in Advanced Data Analytics</strong> from the University of North Texas and a
+          <strong>B.E. in Computer Science</strong> from Mahatma Gandhi Institute of Technology. I'm currently
+          pursuing an <strong>M.S. in Information Technology and Management</strong> at Cumberland University,
+          with a long-term goal of growing into an engineering management role. I care about writing software
+          that is dependable and about helping the people around me do their best work.
         </p>
       </div>
       <div class="about-cards">
@@ -107,8 +105,8 @@
         </div>
         <div class="about-card">
           <div class="k">Currently</div>
-          <div class="v">MBA candidate</div>
-          <div class="s">Toward engineering management</div>
+          <div class="v">M.S. IT &amp; Management</div>
+          <div class="s">Cumberland University</div>
         </div>
         <div class="about-card">
           <div class="k">Based in</div>

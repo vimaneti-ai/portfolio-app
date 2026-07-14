@@ -1,4 +1,4 @@
-import { Component, HostListener, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit } from '@angular/core';
 import { ApiService } from './services/api.service';
 
 @Component({
@@ -7,19 +7,20 @@ import { ApiService } from './services/api.service';
   styleUrl: './app.component.css'
 })
 export class AppComponent implements AfterViewInit {
-  navScrolled = false;
-  menuOpen = false;
   stats = { years: 0, companies: 0, projects: 0 };
+  activeSection = 'about';
 
-  @HostListener('window:scroll')
-  onScroll() {
-    this.navScrolled = window.scrollY > 20;
-  }
+  readonly sections = [
+    { id: 'about',      label: 'About' },
+    { id: 'experience', label: 'Experience' },
+    { id: 'projects',   label: 'Projects' },
+    { id: 'skills',     label: 'Skills' },
+    { id: 'contact',    label: 'Contact' },
+  ];
 
   constructor(private api: ApiService) {}
 
-  toggleMenu() { this.menuOpen = !this.menuOpen; }
-  closeMenu()  { this.menuOpen = false; }
+  closeMenu() {}
 
   ngOnInit() {
     this.trackEvent('page_view', 'site_loaded');
@@ -42,6 +43,16 @@ export class AppComponent implements AfterViewInit {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
     }, { threshold: 0.12 });
     document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    const sectionIo = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) this.activeSection = e.target.id;
+      });
+    }, { threshold: 0.3 });
+    this.sections.forEach(s => {
+      const el = document.getElementById(s.id);
+      if (el) sectionIo.observe(el);
+    });
   }
 
   private getSessionId(): string {
