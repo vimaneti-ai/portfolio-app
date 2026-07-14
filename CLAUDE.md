@@ -189,8 +189,8 @@ mvn clean package -DskipTests
 jar tf target/portfolio-1.0.0.jar | grep application.properties
 scp -i ~/.ssh/portfolio-key.pem target/portfolio-1.0.0.jar ec2-user@3.150.38.140:~/
 ssh -i ~/.ssh/portfolio-key.pem ec2-user@3.150.38.140
-  pkill -f portfolio-1.0.0.jar && sleep 3
-  nohup java -jar portfolio-1.0.0.jar --spring.config.location=application.properties > app.log 2>&1 &
+  sudo systemctl restart portfolio   # systemd manages the process
+  sudo systemctl status portfolio    # verify active (running)
 
 # Frontend (api.service.ts uses relative /api)
 npm run build
@@ -201,15 +201,22 @@ npm run build
 If `scp`/`ssh` to EC2 times out, check the EC2 security group SSH rule. It may
 still allow only an old home IP. Update port `22` source to **My IP**.
 
+Spring Boot is managed by systemd (`/etc/systemd/system/portfolio.service`) — it
+auto-starts on EC2 reboot and restarts automatically if the process crashes.
+
 ## Remaining TODOs
 
-- **EC2 systemd service** — Spring Boot does not auto-start on EC2 reboot; must restart manually. Fix: create `/etc/systemd/system/portfolio.service` and run `systemctl enable portfolio`.
-- **Restrict EC2 port 8080** — currently open to `0.0.0.0/0`; scanner traffic already in Tomcat logs. Fix: remove the `8080 | 0.0.0.0/0` inbound rule from the EC2 security group.
 - **JUnit tests** — zero unit tests exist for `ContactService`, `ProjectService`, `VisitorAnalyticsService`.
-- **npm audit** — frontend has unresolved dependency warnings; run `npm audit` and `npm audit fix` (avoid `--force` without reviewing breaking changes).
-- **SEO** — `index.html` only has `<title>PortfolioSite</title>`; needs meta description and Open Graph tags.
-- **Stray files in git** — `portfolio-backend/apache-maven-3.9.9-bin.tar.gz`, `portfolio-backend/app.log`, `portfolio-site/app.log` should be removed from tracking (`git rm --cached`) and added to `.gitignore`.
-- **Resume PDF** — at `portfolio-site/src/assets/Vinod_Resume.pdf`; nav Resume link and hero social pills link here.
+- **Resume PDF** — at `portfolio-site/src/assets/Vinod_Resume.pdf`; nav Resume link and hero social pill link here.
+- **Frontend deploy** — UI changes (light theme, pill nav, timeline fix, education update) are committed to git but not yet uploaded to S3 / invalidated on CloudFront.
+
+## Completed infrastructure
+
+- **EC2 systemd service** — `portfolio.service` created, enabled, and running. Spring Boot auto-starts on reboot and auto-restarts on crash.
+- **EC2 port 8080 restricted** — `0.0.0.0/0` inbound rule removed from security group; only CloudFront can reach the API.
+- **SEO** — `index.html` has `<title>`, `<meta name="description">`, and Open Graph tags for LinkedIn/Slack previews.
+- **npm audit** — safe fixes applied (`npm audit fix`); remaining 48 vulnerabilities are all dev-only webpack internals, not fixable without breaking Angular 17.
+- **Stray files** — `apache-maven-3.9.9-bin.tar.gz` removed from git tracking; `*.tar.gz` added to `.gitignore`.
 
 ## Security
 

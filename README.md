@@ -239,5 +239,4 @@ CloudFront invalidation for `/*`.
 
 ## Known limitations
 
-- Spring Boot does not auto-start on EC2 reboot — must be restarted manually after an EC2 stop/start
-- npm audit has unresolved frontend dependency warnings — not yet reviewed
+- npm audit has 48 unresolved frontend dependency warnings — all dev-only webpack internals, not fixable without upgrading past Angular 17
