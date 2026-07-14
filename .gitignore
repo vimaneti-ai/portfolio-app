@@ -16,3 +16,4 @@ portfolio-site/dist/
 # Server logs
 *.log
 portfolio-backend/config/application.properties
+*.tar.gz
