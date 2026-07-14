@@ -206,9 +206,7 @@ auto-starts on EC2 reboot and restarts automatically if the process crashes.
 
 ## Remaining TODOs
 
-- **JUnit tests** — zero unit tests exist for `ContactService`, `ProjectService`, `VisitorAnalyticsService`.
 - **Resume PDF** — at `portfolio-site/src/assets/Vinod_Resume.pdf`; nav Resume link and hero social pill link here.
-- **Frontend deploy** — UI changes (light theme, pill nav, timeline fix, education update) are committed to git but not yet uploaded to S3 / invalidated on CloudFront.
 
 ## Completed infrastructure
 
@@ -217,6 +215,9 @@ auto-starts on EC2 reboot and restarts automatically if the process crashes.
 - **SEO** — `index.html` has `<title>`, `<meta name="description">`, and Open Graph tags for LinkedIn/Slack previews.
 - **npm audit** — safe fixes applied (`npm audit fix`); remaining 48 vulnerabilities are all dev-only webpack internals, not fixable without breaking Angular 17.
 - **Stray files** — `apache-maven-3.9.9-bin.tar.gz` removed from git tracking; `*.tar.gz` added to `.gitignore`.
+- **JUnit tests** — 45 unit tests across 5 service classes: `ContactService`, `ContactEmailService`, `ProjectService`, `VisitorAnalyticsService`, `AnalyticsDashboardService`. All passing.
+- **Admin analytics dashboard** — `/admin` route shows login screen + visitor stats, daily bar chart, browser/OS/device/country breakdowns, and recent events table. Protected by HTTP Basic Auth (`GET /api/analytics/summary`).
+- **GitHub Actions CI/CD** — `.github/workflows/deploy.yml` auto-deploys on every push to `main`: runs all unit tests, then deploys backend JAR to EC2 via SSH and frontend build to S3 + CloudFront in parallel.
 
 ## Security
 

@@ -205,37 +205,33 @@ The app is live on AWS. See [DEPLOYMENT.md](DEPLOYMENT.md) for the full setup gu
 
 **To redeploy after a code change:**
 
+Deployment is fully automated via GitHub Actions (`.github/workflows/deploy.yml`). Every push to `main` triggers:
+1. All 45 unit tests
+2. Backend JAR build → SCP to EC2 → `systemctl restart portfolio`
+3. Angular build → S3 sync → CloudFront invalidation `/*`
+
+```bash
+git push origin main   # triggers full deploy automatically
+```
+
+**Manual deploy (fallback only):**
+
 Backend:
 ```bash
-cd /Users/vinod/Projects/portfolio-app/portfolio-backend
+cd portfolio-backend
 mvn clean package -DskipTests
 jar tf target/portfolio-1.0.0.jar | grep application.properties
 scp -i ~/.ssh/portfolio-key.pem target/portfolio-1.0.0.jar ec2-user@3.150.38.140:~/
-# SSH in, pkill old process, nohup new jar
+ssh -i ~/.ssh/portfolio-key.pem ec2-user@3.150.38.140
+  sudo systemctl restart portfolio
 ```
-
-The JAR check should list only `application.properties.example`, never
-`BOOT-INF/classes/application.properties`.
 
 Frontend:
 ```bash
-npm run build
-# Upload dist/portfolio-site/browser/ to S3 bucket vinod-portfolio-2026
-# Create CloudFront invalidation /* to bust the cache
+cd portfolio-site && npm run build
+aws s3 sync dist/portfolio-site/browser/ s3://vinod-portfolio-2026 --delete
+aws cloudfront create-invalidation --distribution-id E2EZ2L1KSZ1EQ8 --paths "/*"
 ```
-
-If `npm run build` fails with `Cannot find module './bootstrap'`, reinstall the
-frontend dependencies:
-```bash
-cd /Users/vinod/Projects/portfolio-app/portfolio-site
-rm -rf node_modules
-npm ci
-npm run build
-```
-
-If the AWS CLI is not installed locally, upload the contents of
-`dist/portfolio-site/browser/` manually in the S3 console, then create a
-CloudFront invalidation for `/*`.
 
 ## Known limitations
 
