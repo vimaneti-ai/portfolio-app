@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
@@ -33,12 +35,18 @@ public class VisitorAnalyticsService {
     @PostConstruct
     void initGeoDb() {
         try {
-            InputStream is = new ClassPathResource("GeoLite2-City.mmdb").getInputStream();
+            // On EC2 the file sits next to the JAR in /home/ec2-user/;
+            // locally it falls back to src/main/resources/ via classpath.
+            File fsFile = new File("GeoLite2-City.mmdb");
+            InputStream is = fsFile.exists()
+                    ? new FileInputStream(fsFile)
+                    : new ClassPathResource("GeoLite2-City.mmdb").getInputStream();
             geoReader = new DatabaseReader.Builder(is).build();
-            log.info("GeoLite2-City database loaded");
+            log.info("GeoLite2-City database loaded from {}",
+                    fsFile.exists() ? fsFile.getAbsolutePath() : "classpath");
         } catch (Exception e) {
             log.warn("GeoLite2-City.mmdb not found — location lookup disabled. "
-                   + "Download from maxmind.com and place in src/main/resources/");
+                   + "Download from maxmind.com and place in src/main/resources/ or next to the JAR.");
         }
     }
 
