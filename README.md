@@ -234,6 +234,23 @@ aws s3 sync dist/portfolio-site/browser/ s3://vinod-portfolio-2026 --delete
 aws cloudfront create-invalidation --distribution-id E2EZ2L1KSZ1EQ8 --paths "/*"
 ```
 
+## Engineering decisions
+
+### Rate limiting on the contact form
+
+`POST /api/contact` is a public endpoint that writes to MySQL and fires a Gmail SMTP call on every submission. Without any guard, a bot could flood both the database and the inbox.
+
+**Approach — token bucket via Bucket4j:**  
+Each client IP gets a bucket of 5 tokens. Every submission consumes one token; the bucket refills to 5 every hour. Requests that arrive with an empty bucket receive `HTTP 429 Too Many Requests` immediately — no DB write, no email. Bucket4j implements the algorithm correctly (thread-safe, no hand-rolled locking needed).
+
+**IP extraction:**  
+The app sits behind CloudFront, which rewrites the source IP. The real client IP is in the `X-Forwarded-For` header set by CloudFront; the code reads that first and falls back to `remoteAddr` for local development where no proxy is present.
+
+**Why not a Spring filter or Spring Security?**  
+A `@Service` injected directly into the controller is simpler for a single endpoint and keeps the logic easy to test in isolation — four unit tests cover the allow/block/independence/fresh-IP cases without any Spring context needed.
+
+---
+
 ## Known limitations
 
 - npm audit has 48 unresolved frontend dependency warnings — all dev-only webpack internals, not fixable without upgrading past Angular 17
