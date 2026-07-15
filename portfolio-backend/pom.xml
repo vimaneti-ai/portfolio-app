@@ -66,6 +66,13 @@
             <version>8.10.1</version>
         </dependency>
 
+        <!-- MaxMind GeoLite2 — offline city-level GeoIP (no HTTP call per request) -->
+        <dependency>
+            <groupId>com.maxmind.geoip2</groupId>
+            <artifactId>geoip2</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+
         <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

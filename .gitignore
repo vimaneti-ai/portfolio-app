@@ -17,3 +17,4 @@ portfolio-site/dist/
 *.log
 portfolio-backend/config/application.properties
 *.tar.gz
+*.mmdb
