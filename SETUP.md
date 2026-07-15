@@ -295,12 +295,13 @@ Then `app.module.ts`, `app.component.html`, `app.component.ts`, and `styles.css`
 
 | Theme | Description |
 |-------|-------------|
-| Original | Dark — violet/teal/black (StackHawk-inspired) |
-| Apple theme | Light — white/gray canvas, near-black text |
-| **Final** | **Dark — StackHawk with 8 CSS tokens (`--ink`, `--surface`, `--edge`, `--hi`, `--lo`, `--violet`, `--teal`, `--bronze`)** |
+| Original | Dark — violet/teal/black |
+| Iteration 2 | Light — white/gray canvas, near-black text |
+| **Final** | **Light — marco.fyi inspired, 8 CSS tokens (`--bg`, `--surface`, `--edge`, `--hi`, `--lo`, `--accent`, `--teal`, `--bronze`)** |
 
 UI features added progressively:
-- Hero name single line: "Vinod Kumar" white, "Maneti" animated violet→teal gradient
+- Centered floating pill nav — frosted glass, active section tracking via IntersectionObserver
+- Hero name "Vinod Kumar Maneti" on single line — "Vinod Kumar " in `--hi`, "Maneti" in `--accent`
 - LinkedIn + GitHub social pill buttons (SVG icons) below hero name
 - Stats counter bar (counts up on page load)
 - Glassmorphism about cards (frosted glass + gradient border)

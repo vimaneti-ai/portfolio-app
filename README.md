@@ -10,12 +10,12 @@ GitHub: **https://github.com/vimaneti-ai/portfolio-app**
 
 ## What this app does
 
-Four features make this a real full-stack app instead of a static page:
-
 1. **Projects from a database** — the Projects section loads dynamically from `GET /api/projects`
-2. **Contact form** — Angular reactive form → Spring Boot REST API → MySQL
-3. **Email notifications** — every contact submission triggers a Gmail notification to the site owner and a confirmation reply to the sender (JavaMailSender + Gmail SMTP, async)
-4. **Visitor analytics** — page views and key interactions are sent to `POST /api/analytics/track` and stored in MySQL with session ID, referrer, browser/device details, hashed/truncated IP, and approximate GeoIP fields for public IPs
+2. **Contact form** — Angular reactive form → Spring Boot REST API → MySQL + async Gmail notification to site owner and confirmation reply to sender
+3. **Visitor analytics** — page views and link clicks tracked to MySQL with browser, OS, device, and approximate GeoIP (hashed/truncated IP, no GPS). Admin dashboard at `/admin` shows live charts and a recent events table, secured with HTTP Basic Auth
+4. **45 unit tests** — JUnit 5 + Mockito across all 5 service classes (`ContactService`, `ContactEmailService`, `ProjectService`, `VisitorAnalyticsService`, `AnalyticsDashboardService`)
+5. **CI/CD** — GitHub Actions pipeline runs all tests on every push, then auto-deploys backend to EC2 and frontend to S3 + CloudFront in parallel
+6. **SEO** — `<title>`, `<meta name="description">`, and Open Graph tags for LinkedIn/search previews
 
 ---
 
@@ -81,7 +81,7 @@ portfolio-app/
         components/         ProjectsComponent (dynamic from API), ContactComponent
         services/           api.service.ts — all HTTP calls go through here
       styles.css            Global dark theme — all CSS variables and component styles
-      assets/               Put resume PDF here (vinod-maneti-resume.pdf)
+      assets/               Resume PDF: Vinod_Resume.pdf (nav Resume link points here)
 
   portfolio-db/
     schema.sql              Creates portfolio_db, analytics/contact/project tables, seeds projects
@@ -179,13 +179,14 @@ on the custom domain and the CloudFront domain without browser CORS errors.
 
 ## API reference
 
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET  | `/api/projects` | All projects in display order |
-| GET  | `/api/projects?category=backend` | Filter by category |
-| POST | `/api/contact` | Submit a contact message |
-| GET  | `/api/contact` | List messages (**admin-only, HTTP Basic Auth**) |
-| POST | `/api/analytics/track` | Store a page view or click event |
+| Method | Endpoint | Auth | Purpose |
+|--------|----------|------|---------|
+| GET  | `/api/projects` | public | All projects in display order |
+| GET  | `/api/projects?category=backend` | public | Filter by category |
+| POST | `/api/contact` | public | Submit a contact message |
+| GET  | `/api/contact` | Basic Auth | List stored messages (admin only) |
+| POST | `/api/analytics/track` | public | Store a page view or click event |
+| GET  | `/api/analytics/summary` | Basic Auth | Visitor analytics summary for admin dashboard |
 
 Analytics records are intentionally lightweight. The frontend sends only session/event/page/referrer data. The backend adds request timestamp, user agent, browser, OS, device type, hashed/truncated IP, and approximate location from server-side IP lookup. No browser GPS permission popup is used. Localhost/private IPs intentionally leave location fields blank.
 
